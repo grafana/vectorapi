@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "vectorapi"
+version = "0.1.0"
+description = "Vector API for embeddings."
+authors = ["Grafana ML <machine-learning-ops@grafana.com>"]
+readme = "README.md"
+include = ["README.md"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "0.103.0"
+fastapi-route-logger-middleware = "^0.2.3"
+loguru = "^0.7.0"
+opentelemetry-api = "^1.19.0"
+opentelemetry-exporter-jaeger-thrift = "^1.19.0"
+opentelemetry-instrumentation-fastapi = "^0.40b0"
+opentelemetry-propagator-jaeger = "^1.19.0"
+opentelemetry-sdk = "^1.19.0"
+orjson = "^3.9.5"
+sentence-transformers = "^2.2.2"
+starlette-exporter = "^0.16.0"
+uvicorn = { extras = ["standard"], version = "^0.23.2" }
+
+[tool.poetry.group.dev.dependencies]
+black = "23.7.0"
+coverage = "7.3.0"
+flake8 = "6.1.0"
+httpx = "0.24.1"
+mypy = "1.5.1"
+pytest = "7.4.0"
+pytest-asyncio = "0.21.1"
+pytest-benchmark = "4.0.0"
+ruff = "0.0.286"
+types-orjson = "3.6.2"
+types-redis = "4.6.0.5"
+pytest-httpx = "^0.23.1"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311']
+
+[tool.ruff]
+line-length = 100
+target-version = 'py310'
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+follow_imports = "silent"
+explicit_package_bases = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_reexport = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

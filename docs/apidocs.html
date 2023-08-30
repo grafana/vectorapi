@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>My Project - ReDoc</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <style data-styled="" data-styled-version="4.4.1"></style>
+</head>
+<body>
+    <div id="redoc-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js"> </script>
+    <script>
+        var spec = {"openapi": "3.1.0", "info": {"title": "FastAPI", "version": "0.1.0"}, "paths": {"/v1/embeddings": {"post": {"tags": ["embeddings"], "summary": "Create Embeddings", "description": "Create embeddings for a given text.", "operationId": "create_embeddings_v1_embeddings_post", "requestBody": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmbeddingRequest"}}}, "required": true}, "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmbeddingResponse"}}}}, "422": {"description": "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}}}, "/v1/similarity": {"post": {"tags": ["embeddings"], "summary": "Similarity", "description": "Calculate similarity between two inputs", "operationId": "similarity_v1_similarity_post", "requestBody": {"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SimilarityRequest"}}}, "required": true}, "responses": {"200": {"description": "Successful Response", "content": {"application/json": {"schema": {"items": {"type": "number"}, "type": "array", "title": "Response Similarity V1 Similarity Post"}}}}, "422": {"description": "Validation Error", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HTTPValidationError"}}}}}}}}, "components": {"schemas": {"EmbeddingRequest": {"properties": {"model": {"type": "string", "title": "Model", "default": "BAAI/bge-small-en"}, "input": {"type": "string", "title": "Input"}, "user": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "User"}}, "type": "object", "required": ["input"], "title": "EmbeddingRequest"}, "EmbeddingResponse": {"properties": {"index": {"type": "integer", "title": "Index"}, "object": {"type": "string", "title": "Object", "default": "embedding"}, "embedding": {"items": {"type": "number"}, "type": "array", "title": "Embedding"}}, "type": "object", "required": ["index", "object", "embedding"], "title": "EmbeddingResponse"}, "HTTPValidationError": {"properties": {"detail": {"items": {"$ref": "#/components/schemas/ValidationError"}, "type": "array", "title": "Detail"}}, "type": "object", "title": "HTTPValidationError"}, "SimilarityRequest": {"properties": {"model": {"type": "string", "title": "Model", "default": "BAAI/bge-small-en"}, "sourceSentence": {"type": "string", "title": "Sourcesentence"}, "sentences": {"items": {"type": "string"}, "type": "array", "title": "Sentences"}}, "type": "object", "required": ["sourceSentence", "sentences"], "title": "SimilarityRequest"}, "ValidationError": {"properties": {"loc": {"items": {"anyOf": [{"type": "string"}, {"type": "integer"}]}, "type": "array", "title": "Location"}, "msg": {"type": "string", "title": "Message"}, "type": {"type": "string", "title": "Error Type"}}, "type": "object", "required": ["loc", "msg", "type"], "title": "ValidationError"}}}};
+        Redoc.init(spec, {}, document.getElementById("redoc-container"));
+    </script>
+</body>
+</html>
+
