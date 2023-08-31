@@ -20,6 +20,7 @@ orjson = "^3.9.5"
 sentence-transformers = "^2.2.2"
 starlette-exporter = "^0.16.0"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
+sqlalchemy = "^2.0.20"
 
 [tool.poetry.group.dev.dependencies]
 black = "23.7.0"
