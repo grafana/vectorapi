@@ -1,0 +1,12 @@
+.sentence_transformers
+.git/
+**/__pycache__/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.pytest_cache/
+**/dist/
+**/*.ipynb
+**/.ipynb_checkpoints/
+**/.sentence_transformers
+**/.vscode
+Dockerfile

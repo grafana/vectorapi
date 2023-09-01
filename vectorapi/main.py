@@ -16,7 +16,8 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from starlette.responses import Response
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 
-from vectorapi import embeddings, log, responses
+from vectorapi import embeddings, log, responses, crud
+from vectorapi.db import client
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
@@ -48,6 +49,7 @@ def create_app() -> fastapi.FastAPI:
         initialize_tracing()
 
     app = fastapi.FastAPI(default_response_class=responses.ORJSONResponse)
+    app.client = client
     logger = loguru.logger.patch(log.add_trace_id)
     app.add_middleware(RouteLoggerMiddleware, logger=logger)
     app.add_middleware(
@@ -61,6 +63,7 @@ def create_app() -> fastapi.FastAPI:
     app.add_route("/healthz", health)
     log.init_logging()
     app.include_router(embeddings.router)
+    app.include_router(crud.router)
     FastAPIInstrumentor.instrument_app(app)
 
     return app
@@ -68,3 +71,7 @@ def create_app() -> fastapi.FastAPI:
 
 uvloop.install()
 app = create_app()
+
+@app.on_event("startup")
+async def on_startup():
+    await client.init_db()
