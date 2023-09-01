@@ -1,4 +1,3 @@
-
 from typing import Any, AsyncGenerator
 
 # from pgvector.asyncpg import register_vector
@@ -11,8 +10,10 @@ from pydantic import PostgresDsn, validator
 from sqlalchemy.orm import sessionmaker, mapped_column
 from sqlalchemy.sql import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
 # from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.dialects import postgresql
+
 # from sqlmodel import SQLModel, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -23,7 +24,8 @@ from sqlalchemy import Table, Column, String, MetaData
 ## Get collections
 ## Get collection
 ## Delete a collection
-## Update collection (??) 
+## Update collection (??)
+
 
 class Settings(BaseSettings):
     # PostgreSQL Database Connection
@@ -44,7 +46,7 @@ class Settings(BaseSettings):
             password=values["POSTGRES_PASSWORD"],
             host=values["POSTGRES_HOST"],
             port=int(values["POSTGRES_PORT"]),
-            path=values['POSTGRES_DB'],
+            path=values["POSTGRES_DB"],
         )
 
     class Config:
@@ -53,14 +55,17 @@ class Settings(BaseSettings):
 
 class Client:
     """Doc here"""
+
     def __init__(self, settings=Settings()) -> None:
-        """ Create a postgres connection """
+        """Create a postgres connection"""
         self.db_name = settings.POSTGRES_DB
-        self.engine = create_async_engine(str(settings.SQLALCHEMY_DATABASE_URL), echo=True, future=True)
+        self.engine = create_async_engine(
+            str(settings.SQLALCHEMY_DATABASE_URL), echo=True, future=True
+        )
         self.async_session = async_sessionmaker(
-                self.engine,
-                expire_on_commit=False,
-            )
+            self.engine,
+            expire_on_commit=False,
+        )
 
     async def init_db(self):
         async with self.engine.begin() as conn:
@@ -72,36 +77,36 @@ class Client:
             yield session
 
     async def create_collection(self, name: str, dimension: int) -> None:
-        """ Create a new vector collection 
-        
+        """Create a new vector collection
+
         Args:
             name (str): Name of the collection
             dimension (int): Dimension of the vectors in the collection
 
         Returns:
-            Collection: A collection object    
+            Collection: A collection object
         """
         meta = MetaData(schema=self.db_name)
 
         collection = Table(
             name,
             meta,
-        Column("id", String, primary_key=True),
-        Column("vec", Vector(dimension), nullable=False),
-        Column(
-            "metadata",
-            postgresql.JSONB,
-            server_default=text("'{}'::jsonb"),
-            nullable=False,
-        ),
-        extend_existing=True,
+            Column("id", String, primary_key=True),
+            Column("vec", Vector(dimension), nullable=False),
+            Column(
+                "metadata",
+                postgresql.JSONB,
+                server_default=text("'{}'::jsonb"),
+                nullable=False,
+            ),
+            extend_existing=True,
         )
-        
+
         async with self.engine.begin() as conn:
             await conn.run_sync(meta.drop_all)
             await conn.run_sync(meta.create_all)
 
 
 class Collection:
-    def __init__(self,  name: str, dimension: int) -> None:
+    def __init__(self, name: str, dimension: int) -> None:
         self.table = Table()

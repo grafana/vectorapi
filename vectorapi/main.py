@@ -72,6 +72,7 @@ def create_app() -> fastapi.FastAPI:
 uvloop.install()
 app = create_app()
 
+
 @app.on_event("startup")
 async def on_startup():
     await client.init_db()

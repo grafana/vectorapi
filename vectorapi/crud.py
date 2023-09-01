@@ -13,7 +13,8 @@ router = fastapi.APIRouter(
     tags=["collections"],
 )
 
-class CollectionCreateRequest(BaseModel):
+
+class CollectionCreateRequest(fastapi.Request):
     name: str
     dimension: int
 
@@ -21,6 +22,7 @@ class CollectionCreateRequest(BaseModel):
 class CollectionCreateResponse(BaseModel):
     success: bool
     errors: List[str] = []
+
 
 # fastapi Depends is used to inject the client into the request
 # This is a dependency injection pattern
@@ -31,5 +33,6 @@ class CollectionCreateResponse(BaseModel):
     response_class=ORJSONResponse,
 )
 async def create_collection(request: CollectionCreateRequest):
+    client = request.app.state.client
     await client.create_collection(request.name, request.dimension)
     return CollectionCreateResponse(success=True)
