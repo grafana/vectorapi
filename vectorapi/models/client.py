@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
 from vectorapi.models.collection import Collection
 
@@ -8,25 +8,27 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def create_collection(self, collection: Collection) -> Collection:
+    async def create_collection(self, name: str, dimension: int) -> Collection:
         raise NotImplementedError()
 
     @abstractmethod
-    def get_collection(self, name: str) -> Collection:
+    async def get_collection(self, name: str) -> Optional[Collection]:
+        raise NotImplementedError()
+
+    async def get_or_create_collection(self, name: str, dimension: int) -> Collection:
+        collection = await self.get_collection(name)
+        if collection is None:
+            return await self.create_collection(name, dimension)
+        return collection
+
+    @abstractmethod
+    async def delete_collection(self, name: str):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_or_create_collection(self, name: str) -> Collection:
-        raise NotImplementedError()
-
-    @abstractmethod
-    def delete_collection(self, name: str):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def list_collections(self, collection: Collection) -> List[Collection]:
+    async def list_collections(self, collection: Collection) -> List[Collection]:
         raise NotImplementedError()
 
     # @abstractmethod
-    # def update_collection(self, name: str, dimension: int):
+    # async def update_collection(self, name: str, dimension: int):
     #     pass
