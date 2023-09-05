@@ -1,18 +1,18 @@
-from typing import List, Dict, Any, Optional
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
 
 
-class CollectionPoint:
-    def __init__(self, id: str, embedding: List[float], metadata: Dict[str, Any]) -> None:
-        self.id = id
-        self.embedding = embedding
-        self.metadata = metadata
+class CollectionPoint(BaseModel):
+    id: str
+    embedding: List[float]
+    metadata: Dict[str, Any] = {}
 
 
-class Collection(ABC):
-    def __init__(self, name: str, dimension: int) -> None:
-        self.name = name
-        self.dimension = dimension
+class Collection(BaseModel, ABC):
+    name: str
+    dimension: int
 
     @abstractmethod
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any]) -> None:

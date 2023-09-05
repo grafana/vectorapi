@@ -1,5 +1,6 @@
-from typing import List, Optional
 from abc import ABC, abstractmethod
+from typing import List, Optional
+
 from vectorapi.models.collection import Collection
 
 
@@ -26,7 +27,7 @@ class Client(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def list_collections(self, collection: Collection) -> List[Collection]:
+    async def list_collections(self) -> List[Collection]:
         raise NotImplementedError()
 
     # @abstractmethod
