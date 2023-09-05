@@ -5,12 +5,8 @@ import orjson
 from numpy.typing import NDArray
 from pydantic import BeforeValidator, PlainSerializer
 
-from vectorapi.models.collection import Collection, CollectionPoint
-
-
-def nd_array_custom_before_validator(x):
-    # custome before validation logic
-    return x
+from vectorapi.models.collection import Collection, CollectionPoint, CollectionPointResult
+from loguru import logger
 
 
 def nd_array_custom_serializer(x):
@@ -20,7 +16,7 @@ def nd_array_custom_serializer(x):
 
 NdArray = Annotated[
     NDArray[np.float_],
-    BeforeValidator(nd_array_custom_before_validator),
+    BeforeValidator(lambda x: x),
     PlainSerializer(nd_array_custom_serializer, return_type=str),
 ]
 
@@ -57,9 +53,7 @@ class NumpyCollection(Collection):
         if id not in self.ids:
             await self.insert(id, embedding, metadata)
         else:
-            idx = self.ids.index(id)
-            self.vectors[idx] = embedding
-            self.metadatas[id] = metadata
+            await self.update(id, embedding, metadata)
 
     async def delete(self, id: str) -> None:
         if id not in self.ids:
@@ -74,22 +68,27 @@ class NumpyCollection(Collection):
         idx = self.ids.index(id)
         return CollectionPoint(id=id, embedding=self.vectors[idx], metadata=self.metadatas[id])
 
+    # def _filter_by_metadata(self, filter: Dict[str, Any]):
+    #     pass
+
     async def query(
         self, embedding: List[float], limit: int, filters: Optional[Dict[str, Any]] = None
-    ) -> List[CollectionPoint]:
+    ) -> List[CollectionPointResult]:
+        logger.debug(f"Querying collection {self.name}")
         # search nearest embeddings with cosine similarity, return top N
         similarities = self._cosine_similarity(np.array(embedding), self.vectors)
         top_k_idx = np.argsort(similarities)[::-1][:limit]
-        return sorted(
-            [
-                CollectionPoint(
-                    id=self.ids[i], embedding=self.vectors[i], metadata=self.metadatas[i]
-                )
-                for i in top_k_idx
-            ],
-            key=lambda x: x.similarity,
-            reverse=True,
-        )
+        logger.debug(f"Found top_k_idx {top_k_idx}")
+
+        return [
+            CollectionPointResult(
+                id=self.ids[i],
+                embedding=self.vectors[i],
+                metadata=self.metadatas[self.ids[i]],
+                score=similarities[i],
+            )
+            for i in top_k_idx
+        ]
 
     def _cosine_similarity(
         self, a: NDArray[np.float_], b: NDArray[np.float_], normalize: bool = True
@@ -105,44 +104,3 @@ class NumpyCollection(Collection):
 
     def __repr__(self):
         return f"NumpyCollection(name={self.name}, dimension={self.dimension})"
-
-    # def __init__(self, name: str, dimension: int) -> None:
-    #     super().__init__(name, dimension)
-    #     self.vectors = np.zeros((0, dimension))
-    #     self.metadata = {}
-
-    # async def upsert(
-    #     self, id: str, embedding: NDArray[np.float_], metadata: Dict[str, Any]
-    # ) -> None:
-    #     self.vectors = np.vstack([self.vectors, embedding])
-    #     self.metadata[id] = metadata
-
-    # async def delete(self, id: str) -> None:
-    #     self.vectors = np.delete(self.vectors, id, 0)
-    #     del self.metadata[id]
-
-    # async def fetch(self, id: str) -> CollectionPoint:
-    #     return CollectionPoint(id=id, embedding=self.vectors[id], metadata=self.metadata[id])
-
-    # async def query(
-    #     self, embedding: NDArray[np.float_], limit: int, filter: Optional[Dict[str, Any]] = None
-    # ) -> List:
-    #     # search nearest embeddings with cosine similarity, return top N
-    #     similarities = self._cosine_similarity(embedding, self.vectors)
-    #     top_k_idx = np.argsort(similarities)[::-1][:limit]
-    #     return sorted(
-    #         [CollectionPoint(embedding=self.vectors[i], metadata=self.metadata[i]) for i in top_k_idx],
-    #         key=lambda x: x.similarity,
-    #         reverse=True,
-    #     )
-
-    # def _filter_by_metadata(self, filter: Dict[str, Any]):
-    #     pass
-
-    # def _cosine_similarity(
-    #     self, a: NDArray[np.float_], b: NDArray[np.float_], normalize: bool = True
-    # ):
-    #     similarity = np.matmul(a, b.T)
-    #     if normalize:
-    #         similarity /= np.linalg.norm(a) * np.linalg.norm(b, axis=1)
-    #     return similarity
