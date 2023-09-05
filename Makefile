@@ -5,7 +5,7 @@ VECTORDB_CLIENT := memory
 
 # DOCKER DEV
 build: 
-	docker build -t $(DOCKER_TAG) .
+	docker compose build
 .PHONY: build
 
 up: build

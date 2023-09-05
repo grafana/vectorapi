@@ -1,0 +1,29 @@
+---
+version: "3.4"
+services:
+  db:
+    image: ankane/pgvector
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    volumes:
+      - .:/app
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+      PORT: 8889
+    ports:
+      - 8889:8889
+    depends_on:
+      - db
