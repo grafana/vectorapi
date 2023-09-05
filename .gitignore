@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.sentence_transformers
+.DS_Store
 
 # C extensions
 *.so
