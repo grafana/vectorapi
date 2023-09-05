@@ -1,11 +1,10 @@
 from unittest.mock import MagicMock
 
 import numpy as np
+import pytest
 from pytest_benchmark.plugin import BenchmarkFixture
 
 from vectorapi.embedder import Embedder
-import pytest
-import random
 
 
 class TestEmbedder:

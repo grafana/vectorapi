@@ -17,6 +17,8 @@ from starlette.responses import Response
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 
 from vectorapi import embeddings, log, responses
+from vectorapi.routes.collection_points import router as collection_points_router
+from vectorapi.routes.collections import router as collections_router
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
@@ -61,6 +63,8 @@ def create_app() -> fastapi.FastAPI:
     app.add_route("/healthz", health)
     log.init_logging()
     app.include_router(embeddings.router)
+    app.include_router(collections_router)
+    app.include_router(collection_points_router)
     FastAPIInstrumentor.instrument_app(app)
 
     return app
