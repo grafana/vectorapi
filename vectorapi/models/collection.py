@@ -10,6 +10,10 @@ class CollectionPoint(BaseModel):
     metadata: Dict[str, Any] = {}
 
 
+class CollectionPointResult(CollectionPoint):
+    score: float
+
+
 class Collection(BaseModel, ABC):
     name: str
     dimension: int
@@ -37,7 +41,7 @@ class Collection(BaseModel, ABC):
     @abstractmethod
     async def query(
         self, embedding: List[float], limit: int, filters: Optional[Dict[str, Any]] = None
-    ) -> List[CollectionPoint]:
+    ) -> List[CollectionPointResult]:
         raise NotImplementedError()
 
     @classmethod
