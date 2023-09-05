@@ -20,6 +20,8 @@ orjson = "^3.9.5"
 sentence-transformers = "^2.2.2"
 starlette-exporter = "^0.16.0"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
+pgvector = "^0.2.1"
+asyncpg = "^0.28.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "23.7.0"
