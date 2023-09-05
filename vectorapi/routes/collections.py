@@ -1,5 +1,6 @@
 import fastapi
 from pydantic import BaseModel
+
 from vectorapi.stores.store_client import StoreClient
 
 router = fastapi.APIRouter(

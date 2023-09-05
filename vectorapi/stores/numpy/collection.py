@@ -2,11 +2,11 @@ from typing import Annotated, Any, Dict, List, Optional
 
 import numpy as np
 import orjson
+from loguru import logger
 from numpy.typing import NDArray
 from pydantic import BeforeValidator, PlainSerializer
 
 from vectorapi.models.collection import Collection, CollectionPoint, CollectionPointResult
-from loguru import logger
 
 
 def nd_array_custom_serializer(x):

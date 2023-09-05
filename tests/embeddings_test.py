@@ -1,12 +1,8 @@
-import random
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
-import fastapi.testclient
 import numpy as np
 import pytest
-from httpx import AsyncClient, Response
-from pytest_benchmark.plugin import BenchmarkFixture
-from pytest_httpx import HTTPXMock
+from httpx import AsyncClient
 
 from vectorapi import main
 from vectorapi.embedder import Embedder

@@ -1,9 +1,11 @@
+from typing import List
+
 import fastapi
-from vectorapi.stores.store_client import StoreClient
-from vectorapi.models.collection import CollectionPoint
 from loguru import logger
 from pydantic import BaseModel
-from typing import List
+
+from vectorapi.models.collection import CollectionPoint
+from vectorapi.stores.store_client import StoreClient
 
 router = fastapi.APIRouter(
     prefix="/collections",
