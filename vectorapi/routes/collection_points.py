@@ -7,7 +7,7 @@ from typing import List
 
 router = fastapi.APIRouter(
     prefix="/collections",
-    tags=["collections"],
+    tags=["points"],
 )
 
 
