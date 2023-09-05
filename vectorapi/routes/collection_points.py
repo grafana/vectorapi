@@ -74,14 +74,14 @@ class QueryPointRequest(BaseModel):
 
 @router.post(
     "/{collection_name}/query",
-    name="delete_point",
+    name="query_points",
 )
 async def query_points(
     collection_name: str,
     request: QueryPointRequest,
     client: StoreClient,
 ):
-    """Delete a collection point with the given id."""
+    """Query collection with a given embedding query."""
     try:
         logger.debug(f"Getting collection {collection_name}")
         collection = await client.get_collection(collection_name)
