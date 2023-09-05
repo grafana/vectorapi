@@ -22,6 +22,8 @@ starlette-exporter = "^0.16.0"
 uvicorn = { extras = ["standard"], version = "^0.23.2" }
 pgvector = "^0.2.1"
 asyncpg = "^0.28.0"
+pydantic-settings = "^2.0.3"
+sqlalchemy = "^2.0.20"
 
 [tool.poetry.group.dev.dependencies]
 black = "23.7.0"
