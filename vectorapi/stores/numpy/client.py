@@ -25,22 +25,3 @@ class NumpyClient(Client):
 
     async def list_collections(self) -> List[NumpyCollection]:
         return list(self.collections.values())
-
-
-def singleton(cls):
-    """singleton is a decorator to make sure only one instance of the client is created."""
-    instances = {}
-
-    def get_instance(*args, **kwargs):
-        if cls not in instances:
-            instances[cls] = cls(*args, **kwargs)
-        return instances[cls]
-
-    return get_instance
-
-
-@singleton
-def get_numpy_client() -> Client:
-    """get_client returns the client instance."""
-    # make sure the client instance is a singleton
-    return NumpyClient()
