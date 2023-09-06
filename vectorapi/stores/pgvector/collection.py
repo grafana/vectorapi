@@ -19,10 +19,18 @@ from sqlalchemy import (
 
 # class PGVectorCollection(Collection):
 class PGVectorCollection(Collection):
-    def __init__(self, name: str, dimension: int, table: Table):
-        self.name = name
-        self.dimension = dimension
-        self.table: Table = table
+    _hidden: Table
+
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    # def __init__(self, name: str, dimension: int, collection: Table) -> None:
+    def __init__(self, name: str, dimension: int) -> None:
+        super().__init__(name=name, dimension=dimension)
+        # self.collection = collection
+        # self.vectors = np.empty((0, dimension))
+
 
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         # Implement pgvector-specific logic to insert a point into the collection
@@ -80,7 +88,7 @@ class PGVectorCollection(Collection):
         return cls(name, dimension, table)
 
     def __repr__(self):
-        return f"PGVectorCollection(name={self.name}, dimension={self.dimension})"
+        return f"PGVectorCollection(name={self.name}, dimension={self.dimension}, collection={self.collection})"
 
 
 # # def build_table(name: str, meta: MetaData, dimension: int) -> Table:
