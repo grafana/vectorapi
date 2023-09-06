@@ -1,6 +1,7 @@
 DOCKER_TAG = vectorapi:latest
 VOLUMES = --mount type=bind,source=$(PWD),target=/app
 PORT := 8889
+VECTORDB_CLIENT := memory
 
 # DOCKER DEV
 build: 
@@ -8,7 +9,7 @@ build:
 .PHONY: build
 
 up: build
-	docker run --rm -it -p $(PORT):80  $(VOLUMES) $(DOCKER_TAG)
+	docker run --rm -it -p $(PORT):80 --env VECTORDB_CLIENT=$(VECTORDB_CLIENT) $(VOLUMES) $(DOCKER_TAG)
 .PHONY: up
 
 # LOCAL DEV
@@ -17,7 +18,7 @@ env:
 .PHONY: env
 
 api: env
-	poetry run uvicorn vectorapi.main:app --host 0.0.0.0 --port $(PORT) --log-level debug --reload
+	VECTORDB_CLIENT=$(VECTORDB_CLIENT) poetry run uvicorn vectorapi.main:app --host 0.0.0.0 --port $(PORT) --log-level debug --reload
 .PHONY: api
 
 docs: env

@@ -1,21 +1,28 @@
 import os
-from typing import Annotated, AsyncIterator
+from typing import Annotated
 
 from fastapi import Depends
 
 from vectorapi.models.client import Client
-from vectorapi.stores.numpy.client import get_numpy_client
+from vectorapi.stores.numpy.client import NumpyClient
 
-CLIENT = os.environ.get("CLIENT", "memory")
+VECTORDB_CLIENT = os.environ.get("VECTORDB_CLIENT", "memory")
 
 
-async def get_client() -> AsyncIterator[Client]:
-    """get_client returns the client instance."""
+def init_client(client: str) -> Client:
+    """init_client returns the client instance."""
     # TODO: Add logic to determine which client to use
-    if CLIENT == "memory":
-        yield get_numpy_client()
+    if client == "memory":
+        return NumpyClient()
     else:
-        raise NotImplementedError(f"Client {CLIENT} not implemented")
+        raise NotImplementedError(f"Client {client} not implemented")
+
+
+client = init_client(VECTORDB_CLIENT)
+
+
+async def get_client() -> Client:
+    return client
 
 
 StoreClient = Annotated[Client, Depends(get_client)]
