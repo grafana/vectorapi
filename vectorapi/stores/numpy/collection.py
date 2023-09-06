@@ -4,7 +4,7 @@ import numpy as np
 import orjson
 from loguru import logger
 from numpy.typing import NDArray
-from pydantic import BeforeValidator, PlainSerializer
+from pydantic import BeforeValidator, ConfigDict, PlainSerializer
 
 from vectorapi.models.collection import Collection, CollectionPoint, CollectionPointResult
 
@@ -22,11 +22,10 @@ NdArray = Annotated[
 
 
 class NumpyCollection(Collection):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     vectors: NdArray = np.empty(0)
     metadatas: Dict[str, Dict[str, Any]] = {}
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def __init__(self, name: str, dimension: int) -> None:
         super().__init__(name=name, dimension=dimension)
