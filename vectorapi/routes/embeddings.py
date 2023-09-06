@@ -12,7 +12,6 @@ from vectorapi.embedder import Embedder
 from vectorapi.responses import ORJSONResponse
 
 router = fastapi.APIRouter(
-    prefix="/v1",
     tags=["embeddings"],
 )
 

@@ -63,9 +63,9 @@ def create_app() -> fastapi.FastAPI:
     app.add_route("/metrics", handle_metrics)
     app.add_route("/healthz", health)
     log.init_logging()
-    app.include_router(embeddings_routers)
-    app.include_router(collections_router)
-    app.include_router(collection_points_router)
+    app.include_router(embeddings_routers, prefix="/v1")
+    app.include_router(collections_router, prefix="/v1")
+    app.include_router(collection_points_router, prefix="/v1")
     FastAPIInstrumentor.instrument_app(app)
 
     return app
