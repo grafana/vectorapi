@@ -80,6 +80,7 @@ class PGVectorClient(Client):
                 async with self.bound_async_sessionmaker() as session:
                     await session.execute(drop_expression)
                     await session.commit()
+                self.collections.remove(table)
             else:
                 logger.info(f"Table {name} does not exist")
                 raise ValueError(f"Table {name} does not exist")
