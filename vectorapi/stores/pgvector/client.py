@@ -32,6 +32,7 @@ class PGVectorClient(Client):
             await conn.commit()
 
     async def create_collection(self, name: str, dimension: int) -> Collection:
+        ## TODO: do the init bit during initialisation
         await self.init_db()
         logger.info(f"Creating collection with name {name}")
         collection = Table(
@@ -68,6 +69,7 @@ class PGVectorClient(Client):
             
 
     async def delete_collection(self, name: str):
+        await self.sync()
         try:
             table = self.collections.tables.get(name)
             if table is not None:
