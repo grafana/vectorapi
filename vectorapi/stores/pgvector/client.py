@@ -26,7 +26,9 @@ class PGVectorClient(Client):
             # await conn.commit()
 
     async def sync(self):
-        pass
+        async with self.engine.begin() as conn:
+            await conn.run_sync(self.collections.reflect)
+            await conn.commit()
 
     async def create_collection(self, name: str, dimension: int) -> Collection:
         await self.init_db()
