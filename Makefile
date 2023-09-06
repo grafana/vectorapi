@@ -9,7 +9,8 @@ build:
 .PHONY: build
 
 up: build
-	docker run --rm -it -p $(PORT):80 --env VECTORDB_CLIENT=$(VECTORDB_CLIENT) $(VOLUMES) $(DOCKER_TAG)
+	docker compose up
+	# docker run --rm -it -p $(PORT):80 --env VECTORDB_CLIENT=$(VECTORDB_CLIENT) $(VOLUMES) $(DOCKER_TAG)
 .PHONY: up
 
 # LOCAL DEV

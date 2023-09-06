@@ -22,5 +22,5 @@ def init_db_engine():
         autoflush=False,
         future=True,
     )
-    async_engine.connect().execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+    # asyncio.run(async_engine.connect().execute(text("CREATE EXTENSION IF NOT EXISTS vector")))
     return (async_engine, bound_async_sessionmaker)

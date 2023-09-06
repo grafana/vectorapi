@@ -5,8 +5,9 @@ from fastapi import Depends
 
 from vectorapi.models.client import Client
 from vectorapi.stores.numpy.client import NumpyClient
+from vectorapi.stores.pgvector.client import PGVectorClient
 
-VECTORDB_CLIENT = os.environ.get("VECTORDB_CLIENT", "memory")
+VECTORDB_CLIENT = os.environ.get("VECTORDB_CLIENT", "pgvector")
 
 
 def init_client(client: str) -> Client:
@@ -14,6 +15,9 @@ def init_client(client: str) -> Client:
     # TODO: Add logic to determine which client to use
     if client == "memory":
         return NumpyClient()
+    elif client == "pgvector":
+        pg_client = PGVectorClient()
+        return pg_client
     else:
         raise NotImplementedError(f"Client {client} not implemented")
 
