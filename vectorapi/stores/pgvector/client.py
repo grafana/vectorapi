@@ -21,9 +21,10 @@ class PGVectorClient(Client):
         self._collections_list: List[Dict[str, PGVectorCollection]] = []
 
     async def init_db(self):
+        await self.sync()
         async with self.engine.begin() as conn:
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-            # await conn.commit()
+            await conn.commit()
 
     async def sync(self):
         async with self.engine.begin() as conn:
@@ -85,13 +86,13 @@ class PGVectorClient(Client):
             logger.exception(e)
             raise e
 
-    async def list_collections(self) -> List[Collection]:
-        async with self.engine.begin() as conn:
-            pass
+    async def list_collections(self):
+        await self.sync()
+        return list(self.collections.tables.keys())
 
 
-async def get_pgvector_client() -> Client:
-    """get_client returns the client instance."""
-    client = PGVectorClient()
-    await client.init_db()
-    return client
+# async def get_pgvector_client() -> Client:
+#     """get_client returns the client instance."""
+#     client = PGVectorClient()
+#     await client.init_db()
+#     return client
