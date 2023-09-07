@@ -6,6 +6,9 @@ from pgvector.sqlalchemy import Vector
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
+from sqlalchemy.schema import CreateTable, DropTable
+from sqlalchemy import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.dialects import postgresql
@@ -19,7 +22,8 @@ from sqlalchemy import (
 
 # class PGVectorCollection(Collection):
 class PGVectorCollection(Collection):
-    _hidden: Table
+    _embeddings: Table
+    _session_maker: AsyncSession
 
 
     class Config:
@@ -28,9 +32,6 @@ class PGVectorCollection(Collection):
     # def __init__(self, name: str, dimension: int, collection: Table) -> None:
     def __init__(self, name: str, dimension: int) -> None:
         super().__init__(name=name, dimension=dimension)
-        # self.collection = collection
-        # self.vectors = np.empty((0, dimension))
-
 
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         # Implement pgvector-specific logic to insert a point into the collection
@@ -42,10 +43,13 @@ class PGVectorCollection(Collection):
         # You may need to use SQL queries to update the data
         pass
 
-    async def upsert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
-        # Implement pgvector-specific logic to upsert (insert or update) a point in the collection
-        # You may need to use SQL queries to upsert the data
-        pass
+    async def upsert(self, id: str, embedding: List[float], metadata: Dict[str, str]) -> None:
+        # Implement pgvector-specific logic to insert a point into the collection
+        # You may need to use SQL queries to insert the data
+        statement = postgresql.insert(self._embeddings).values((id, embedding, metadata))
+        async with self._session_maker() as session:
+            await session.execute(statement=statement)
+            await session.commit()
 
     async def delete(self, id: str) -> None:
         # Implement pgvector-specific logic to delete a point from the collection
@@ -66,54 +70,30 @@ class PGVectorCollection(Collection):
         # Return a list of CollectionPointResult objects with the query results
         pass
 
-    @classmethod
-    async def create(cls, name, dimension, engine) -> "PGVectorCollection":
+    async def create(self, session_maker, metadata) -> "PGVectorCollection":
         # Implement logic to create a PGVectorCollection instance
         # This may involve setting up the collection in pgvector or performing any other necessary tasks
         # Return the created PGVectorCollection instance
-        # Define the SQL statement to create a table for vector data
-        table = Table(
-            name,
-            Column("id", String, primary_key=True),
-            Column("vec", Vector(dimension), nullable=False),
-            Column(
-                "metadata",
-                postgresql.JSONB,
-                server_default=text("'{}'::jsonb"),
-                nullable=True,
-            ),
-        )
-        with engine.begin() as conn:
-            conn.run_sync(table.create)
-        return cls(name, dimension, table)
+        embeddings = Table(
+                    self.name,
+                    metadata,
+                Column("id", String, primary_key=True),
+                Column("embeddings", Vector(self.dimension), nullable=False),
+                Column(
+                    "metadata",
+                    postgresql.JSONB,
+                    server_default=text("'{}'::jsonb"),
+                    nullable=False,
+                ),
+                extend_existing=True,
+                )
+        create_expression = CreateTable(embeddings)
+        async with session_maker() as session:
+            await session.execute(create_expression)
+            await session.commit()
+        self._embeddings = embeddings
+        self._session_maker = session_maker
+        return self
 
     def __repr__(self):
-        return f"PGVectorCollection(name={self.name}, dimension={self.dimension}, collection={self.collection})"
-
-
-# # def build_table(name: str, meta: MetaData, dimension: int) -> Table:
-# #     """
-# #     PRIVATE
-
-# #     Builds a SQLAlchemy model
-
-# #     Args:
-# #         name (str): The name of the table.
-# #         dimension: The dimension of the vectors in the collection.
-# #         metadatas: Dict[str, Dict[str, Any]] = {}
-
-# #     Returns:
-# #         Table: The constructed SQL table.
-# #     """
-# #     return Table(
-# #         name,
-# #         Column("id", String, primary_key=True),
-# #         Column("vec", Vector(dimension), nullable=False),
-# #         Column(
-# #             "metadata",
-# #             postgresql.JSONB,
-# #             server_default=text("'{}'::jsonb"),
-# #             nullable=True,
-# #         ),
-# #         extend_existing=True,
-# #     )
+        return f"PGVectorCollection(name={self.name}, dimension={self.dimension})"
