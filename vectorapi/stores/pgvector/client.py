@@ -18,7 +18,7 @@ class PGVectorClient(Client):
     def __init__(self):
         self.engine, self.bound_async_sessionmaker = init_db_engine()
         self.collections = MetaData()
-        self._collections_list: List[Dict[str, PGVectorCollection]] = []
+        self._collections_dict: Dict[str, PGVectorCollection] = {}
 
     async def init_db(self):
         await self.sync()
@@ -35,38 +35,18 @@ class PGVectorClient(Client):
         ## TODO: do the init bit during initialisation
         await self.init_db()
         logger.info(f"Creating collection with name {name}")
-        collection = Table(
-            name,
-            self.collections,
-        Column("id", String, primary_key=True),
-        Column("embeddings", Vector(dimension), nullable=False),
-        Column(
-            "metadata",
-            postgresql.JSONB,
-            server_default=text("'{}'::jsonb"),
-            nullable=False,
-        ),
-        extend_existing=True,
-        )
-        create_expression = CreateTable(collection)
-        logger.info(create_expression)
         col = PGVectorCollection(name=name, dimension=dimension)
-        
         try:
-            async with self.bound_async_sessionmaker() as session:
-                await session.execute(create_expression)
-                await session.commit()
+            await col.create(session_maker=self.bound_async_sessionmaker, metadata=self.collections)
         except Exception as e:
             logger.exception(e)
             raise e
+        self._collections_dict[name] = col
         return col
 
     
     async def get_collection(self, name: str) -> Optional[Collection]:
-        async with self.bound_async_sessionmaker() as session:
-            await session.execute(text(f"SELECT * FROM {name}"))
-            await session.commit()
-            
+        return self._collections_dict.get(name)
 
     async def delete_collection(self, name: str):
         await self.sync()
