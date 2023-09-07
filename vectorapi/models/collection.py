@@ -10,7 +10,8 @@ class CollectionPoint(BaseModel):
     metadata: Dict[str, Any] = {}
 
 
-class CollectionPointResult(CollectionPoint):
+class CollectionPointResult(BaseModel):
+    payload: CollectionPoint
     score: float
 
 
