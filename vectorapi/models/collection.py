@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class CollectionPoint(BaseModel):
     id: str
-    embedding: List[float]
+    embedding: List[float] = None
     metadata: Dict[str, Any] = {}
 
 
