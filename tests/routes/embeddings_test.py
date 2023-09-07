@@ -30,7 +30,7 @@ async def test_embeddings(get_embedder_mock: Mock):
 
     assert response.status_code == 200
     embedding_response = EmbeddingResponse.model_validate_json(response.content)
-    assert len(embedding_response.embedding) == 3
+    assert len(embedding_response.data[0].embedding) == 3
 
 
 @patch("vectorapi.routes.embeddings.get_embedder")
