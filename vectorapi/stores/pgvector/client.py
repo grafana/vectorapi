@@ -5,7 +5,7 @@ import os
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
 from vectorapi.stores.pgvector.collection import SCHEMA_NAME
-from vectorapi.stores.pgvector.collection2 import PGVectorCollection
+from vectorapi.stores.pgvector.collection import PGVectorCollection
 from sqlalchemy.schema import CreateTable, DropTable
 
 from sqlalchemy import MetaData

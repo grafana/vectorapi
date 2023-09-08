@@ -22,6 +22,7 @@ from vectorapi.routes.collection_points import router as collection_points_route
 from vectorapi.routes.collections import router as collections_router
 from vectorapi.routes.embeddings import router as embeddings_routers
 from vectorapi.stores.store_client import client
+import uvicorn
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
@@ -85,3 +86,12 @@ def create_app() -> fastapi.FastAPI:
 
 uvloop.install()
 app = create_app()
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", 8889)),
+        log_level="debug",
+    )

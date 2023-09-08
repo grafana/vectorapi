@@ -12,12 +12,12 @@ from vectorapi.models.collection import Collection
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from vectorapi.stores.pgvector.base import Base
+from typing import Type
 
 
-class CollectionTable(Base):
+class CollectionTable(AbstractConcreteBase, Base):
     __abstract__ = True
     __dimensions__ = 0
-    __table_args__ = {"extend_existing": True}
 
     strict_attrs = True
     id: Mapped[str] = mapped_column(
@@ -81,18 +81,35 @@ class CollectionTable(Base):
 
 class PGVectorCollection(Collection):
     session_maker: async_sessionmaker = Field(..., exclude=True)
-    table: CollectionTable | None = Field(default=None, exclude=True)
+    # table: Type[CollectionTable] = Field(exclude=True)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def sync(self):
-        table_classname = f"{self.name}CollectionTable"
-        mydict = {
-            "__tablename__": self.name,
-            # "__table_args__": {"autoload": True},
-            "__dimensions__": self.dimension,
-        }
-        self.table = type(table_classname, (CollectionTable,), mydict)
+    # @property
+    # def table(self) -> Type[CollectionTable]:
+    #     # Create the class dynamically
+    #     class CustomCollectionTable(CollectionTable):
+    #         __tablename__ = self.name
+    #         __dimensions__ = self.dimension
+    #         __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
+    #         __table_args__ = {"extend_existing": True}
+
+    #         # Define the columns specific to the Case object
+    #         # ...
+    #         # Define any additional methods or customizations
+    #         # Cache the dynamically created class in the RegistryProxy
+    #         # RegistryProxy.add_mapped_case_model_for_tenant(table_name, Case)
+
+    #     return CustomCollectionTable
+
+    # def sync(self):
+    #     table_classname = f"{self.name}CollectionTable"
+    #     mydict = {
+    #         "__tablename__": self.name,
+    #         # "__table_args__": {"autoload": True},
+    #         "__dimensions__": self.dimension,
+    #     }
+    #     self.table = type(table_classname, (CollectionTable,), mydict)
 
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         # Implement pgvector-specific logic to insert a point into the collection
