@@ -30,6 +30,12 @@ class Client(ABC):
     async def list_collections(self) -> List[Collection]:
         raise NotImplementedError()
 
+    async def setup(self):
+        pass
+
+    async def teardown(self):
+        pass
+
     # @abstractmethod
     # async def update_collection(self, name: str, dimension: int):
     #     pass
