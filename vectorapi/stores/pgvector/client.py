@@ -1,6 +1,6 @@
 # import asyncpg
 from typing import List, Optional, Dict
-import os 
+import os
 
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
@@ -19,8 +19,7 @@ class PGVectorClient(Client):
         self.engine, self.bound_async_sessionmaker = init_db_engine()
         self._metadata = MetaData(schema=SCHEMA_NAME)
 
-    async def init_db(self):
-        await self.sync()
+    async def setup(self):
         async with self.engine.begin() as conn:
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.execute(CreateSchema(SCHEMA_NAME, if_not_exists=True))
@@ -33,7 +32,6 @@ class PGVectorClient(Client):
 
     async def create_collection(self, name: str, dimension: int) -> Collection:
         ## TODO: do the init bit during initialisation
-        await self.init_db()
         logger.info(f"Creating collection with name {name}")
         col = PGVectorCollection(name=name, dimension=dimension)
         try:
@@ -43,9 +41,7 @@ class PGVectorClient(Client):
             raise e
         return col
 
-    
     async def get_collection(self, name: str) -> Optional[Collection]:
-        await self.sync()
         # table = self._metadata.tables.get(f"{self._metadata.schema}.{name}")
         ## How to get the dimension of the collection?
         table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
@@ -60,7 +56,6 @@ class PGVectorClient(Client):
 
     async def delete_collection(self, name: str):
         ## TODO: adopt a consistent implemetation with create_collection.
-        await self.sync()
         try:
             table = self._metadata.tables.get(f"{self._metadata.schema}.{name}")
             if table is not None:
@@ -81,12 +76,11 @@ class PGVectorClient(Client):
             raise e
 
     async def list_collections(self):
-        await self.sync()
         return list(self._metadata.tables.keys())
 
     async def collection_exists(self, name: str) -> bool:
-        await self.sync()
         return name in self._metadata.tables.keys()
+
 
 # async def get_pgvector_client() -> Client:
 #     """get_client returns the client instance."""
