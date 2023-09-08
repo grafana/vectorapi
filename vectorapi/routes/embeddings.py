@@ -12,7 +12,6 @@ from vectorapi.embedder import Embedder
 from vectorapi.responses import ORJSONResponse
 
 router = fastapi.APIRouter(
-    prefix="/v1",
     tags=["embeddings"],
 )
 
@@ -26,10 +25,22 @@ class BaseModelCamel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel)  # type: ignore
 
 
-class EmbeddingResponse(BaseModelCamel):
+class EmbeddingResponseData(BaseModelCamel):
     index: int
     object: str = "embedding"
     embedding: List[float]
+
+
+class EmbeddingResponseUsage(BaseModelCamel):
+    prompt_tokens: int
+    total_tokens: int
+
+
+class EmbeddingResponse(BaseModelCamel):
+    object: str = "list"
+    data: List[EmbeddingResponseData]
+    model: str
+    usage: EmbeddingResponseUsage
 
 
 class EmbeddingRequest(BaseModelCamel):
@@ -56,7 +67,12 @@ async def create_embeddings(request: EmbeddingRequest):
             status_code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error encoding text: {err}",
         )
-    return EmbeddingResponse(index=0, embedding=vector.tolist())
+    data = [EmbeddingResponseData(index=0, embedding=vector.tolist())]
+    return EmbeddingResponse(
+        data=data,
+        model=request.model,
+        usage=EmbeddingResponseUsage(promptTokens=0, totalTokens=0),
+    )
 
 
 class SimilarityRequest(BaseModelCamel):
