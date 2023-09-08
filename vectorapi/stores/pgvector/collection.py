@@ -21,7 +21,7 @@ from sqlalchemy import (
 )
 
 ##TODO: Pass this from the client
-SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME")
+SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME", "vector")
 
 # class PGVectorCollection(Collection):
 class PGVectorCollection(Collection):
