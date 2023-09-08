@@ -23,12 +23,11 @@ class PGVectorClient(Client):
         async with self.engine.begin() as conn:
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.execute(CreateSchema(SCHEMA_NAME, if_not_exists=True))
-            await conn.commit()
+        await self.sync()
 
     async def sync(self):
         async with self.engine.begin() as conn:
             await conn.run_sync(self._metadata.reflect)
-            await conn.commit()
 
     async def create_collection(self, name: str, dimension: int) -> Collection:
         ## TODO: do the init bit during initialisation
