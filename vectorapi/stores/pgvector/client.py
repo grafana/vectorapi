@@ -5,12 +5,13 @@ import os
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
 from vectorapi.stores.pgvector.collection import SCHEMA_NAME
-from vectorapi.stores.pgvector.collection import PGVectorCollection
+from vectorapi.stores.pgvector.collection2 import PGVectorCollection
 from sqlalchemy.schema import CreateTable, DropTable
 
 from sqlalchemy import MetaData
 from sqlalchemy.sql import text
 from sqlalchemy.schema import CreateSchema
+from sqlalchemy.ext.declarative import declarative_base
 from vectorapi.stores.pgvector.db import init_db_engine
 from loguru import logger
 from vectorapi.stores.pgvector.base import Base
@@ -34,15 +35,16 @@ class PGVectorClient(Client):
     async def create_collection(self, name: str, dimension: int) -> Collection:
         ## TODO: do the init bit during initialisation
         logger.info(f"Creating collection name={name} dimension={dimension}")
-        col = PGVectorCollection(
+        collection = PGVectorCollection(
             name=name, dimension=dimension, session_maker=self.bound_async_sessionmaker
         )
         try:
-            await col.create(session_maker=self.bound_async_sessionmaker, metadata=self._metadata)
+            async with self.engine.begin() as conn:
+                await conn.run_sync(self._metadata.create_all)
         except Exception as e:
             logger.exception(e)
             raise e
-        return col
+        return collection
 
     async def get_collection(self, name: str) -> Optional[Collection]:
         logger.info(f"Getting collection name={name}")

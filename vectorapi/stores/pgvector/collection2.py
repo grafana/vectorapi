@@ -80,27 +80,21 @@ class CollectionTable(AbstractConcreteBase, Base):
 
 
 class PGVectorCollection(Collection):
-    session_maker: async_sessionmaker = Field(..., exclude=True)
+    session_maker: async_sessionmaker[AsyncSession] = Field(..., exclude=True)
     # table: Type[CollectionTable] = Field(exclude=True)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # @property
-    # def table(self) -> Type[CollectionTable]:
-    #     # Create the class dynamically
-    #     class CustomCollectionTable(CollectionTable):
-    #         __tablename__ = self.name
-    #         __dimensions__ = self.dimension
-    #         __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
-    #         __table_args__ = {"extend_existing": True}
+    @property
+    def table(self) -> CollectionTable:
+        # Create the class dynamically
+        class CustomCollectionTable(CollectionTable):
+            __tablename__ = self.name
+            __dimensions__ = self.dimension
+            __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
+            __table_args__ = {"extend_existing": True, "autoload": True}
 
-    #         # Define the columns specific to the Case object
-    #         # ...
-    #         # Define any additional methods or customizations
-    #         # Cache the dynamically created class in the RegistryProxy
-    #         # RegistryProxy.add_mapped_case_model_for_tenant(table_name, Case)
-
-    #     return CustomCollectionTable
+        return CustomCollectionTable()
 
     # def sync(self):
     #     table_classname = f"{self.name}CollectionTable"
@@ -116,17 +110,23 @@ class PGVectorCollection(Collection):
         # You may need to use SQL queries to insert the data
         pass
 
-    async def create(self, session_maker, metadata) -> None:
-        async with session_maker() as session:
-            async with session.begin():
-                await session.run_sync(CollectionTable.metadata.create_all)
-                await session.commit()
+    async def create(self) -> None:
+        pass
 
-    async def delete(self, session_maker) -> None:
-        async with session_maker() as session:
-            async with session.begin():
-                await session.run_sync(CollectionTable.metadata.drop_all)
-                await session.commit()
+        # create_expression = CreateTable(self.table, if_not_exists=True)
+        # async with self.session_maker() as session:
+        #     await session.execute(create_expression)
+        #     await session.commit()
+
+        # async with self.session_maker() as session:
+
+        #     session.add(self.table)
+        #     await session.flush()
+
+    async def delete(self) -> None:
+        async with self.session_maker() as session:
+            await session.delete(self.table)
+            await session.flush()
 
     async def query(self, query: List[float], limit: int = 10) -> List[CollectionPointResult]:
         # Implement pgvector-specific logic to search the collection
