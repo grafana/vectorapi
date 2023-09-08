@@ -23,6 +23,7 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_DB: postgres
       POSTGRES_SCHEMA_NAME: vector
+      VECTORDB_CLIENT: pgvector
       PORT: 8889
     ports:
       - 8889:8889
