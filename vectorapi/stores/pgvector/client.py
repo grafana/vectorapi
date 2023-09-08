@@ -4,7 +4,8 @@ import os
 
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
-from vectorapi.stores.pgvector.collection import PGVectorCollection, SCHEMA_NAME
+from vectorapi.stores.pgvector.collection import SCHEMA_NAME
+from vectorapi.stores.pgvector.collection2 import PGVectorCollection
 from sqlalchemy.schema import CreateTable, DropTable
 
 from sqlalchemy import MetaData
@@ -12,12 +13,13 @@ from sqlalchemy.sql import text
 from sqlalchemy.schema import CreateSchema
 from vectorapi.stores.pgvector.db import init_db_engine
 from loguru import logger
+from vectorapi.stores.pgvector.base import Base
 
 
 class PGVectorClient(Client):
     def __init__(self):
         self.engine, self.bound_async_sessionmaker = init_db_engine()
-        self._metadata = MetaData(schema=SCHEMA_NAME)
+        self._metadata = Base.metadata
 
     async def setup(self):
         async with self.engine.begin() as conn:
@@ -31,8 +33,10 @@ class PGVectorClient(Client):
 
     async def create_collection(self, name: str, dimension: int) -> Collection:
         ## TODO: do the init bit during initialisation
-        logger.info(f"Creating collection with name {name}")
-        col = PGVectorCollection(name=name, dimension=dimension)
+        logger.info(f"Creating collection name={name} dimension={dimension}")
+        col = PGVectorCollection(
+            name=name, dimension=dimension, session_maker=self.bound_async_sessionmaker
+        )
         try:
             await col.create(session_maker=self.bound_async_sessionmaker, metadata=self._metadata)
         except Exception as e:
@@ -41,19 +45,24 @@ class PGVectorClient(Client):
         return col
 
     async def get_collection(self, name: str) -> Optional[Collection]:
+        logger.info(f"Getting collection name={name}")
         # table = self._metadata.tables.get(f"{self._metadata.schema}.{name}")
         ## How to get the dimension of the collection?
         table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
         if table is not None:
             logger.info(f"Found table: {table}")
+            # logger.info(table.__dict__)
+            ##TODO: Need to get the dimension of the collection.
+            ## Also there is no need to create a new collection here.
+            collection = PGVectorCollection(
+                name=name, dimension=2, session_maker=self.bound_async_sessionmaker
+            )
 
-        ##TODO: Need to get the dimension of the collection.
-        ## Also there is no need to create a new collection here.
-        c = PGVectorCollection(name=name, dimension=2)
-        c._session_maker = self.bound_async_sessionmaker
-        return c
+            return collection
+        return None
 
     async def delete_collection(self, name: str):
+        logger.info(f"Deleting collection name={name}")
         ## TODO: adopt a consistent implemetation with create_collection.
         try:
             table = self._metadata.tables.get(f"{self._metadata.schema}.{name}")
@@ -75,7 +84,15 @@ class PGVectorClient(Client):
             raise e
 
     async def list_collections(self):
-        return list(self._metadata.tables.keys())
+        logger.info("Listing collections..")
+        return [
+            PGVectorCollection(
+                name=table.name,
+                dimension=2,
+                session_maker=self.bound_async_sessionmaker,
+            )
+            for table in self._metadata.tables.values()
+        ]
 
     async def collection_exists(self, name: str) -> bool:
         return name in self._metadata.tables.keys()
