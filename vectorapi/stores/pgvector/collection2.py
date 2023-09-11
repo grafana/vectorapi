@@ -146,12 +146,12 @@ class PGVectorCollection(Collection):
             return []
 
         stmt = select(self.table).order_by(self.table.embedding.cosine_distance(query))
-        # add column with cosine distance
-        stmt = stmt.column(self.table.embedding.cosine_distance(query).label("distance2"))
+        # add column with cosine similarity
+        stmt = stmt.column((1-self.table.embedding.cosine_distance(query)).label("cosine_similarity"))
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
-            ## After adding column distance2 to stmt, the result is a tuple of (CollectionTable, distance2)
+            ## After adding column cosine_similarity to stmt, the result is a tuple of (CollectionTable, cosine_similarity)
             results = query_execution.all()
 
         return [
