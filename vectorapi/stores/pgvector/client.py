@@ -84,6 +84,7 @@ class PGVectorClient(Client):
             if table is not None:
                 async with self.engine.begin() as conn:
                     await conn.run_sync(table.drop)
+                    self._metadata.remove(table)
             else:
                 logger.info(f"Table {name} does not exist")
                 raise Exception(f"Table {name} does not exist")
