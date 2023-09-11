@@ -7,7 +7,7 @@ from sqlalchemy import String, select, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import AbstractConcreteBase
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, declared_attr
 from vectorapi.models.collection import Collection
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -18,15 +18,16 @@ from typing import Annotated
 
 class CollectionTable(AbstractConcreteBase, Base):
     __abstract__ = True
-    __dimensions__ = 2
 
     # strict_attrs = True
     id: Mapped[str] = mapped_column(
         "id", String, autoincrement=False, nullable=False, unique=True, primary_key=True
     )
-    embedding: Mapped[List[float]] = mapped_column(
-        "embedding", Vector(__dimensions__), nullable=False
-    )
+
+    @declared_attr
+    def embedding(cls) -> Mapped[List[float]]:
+        return mapped_column("embedding", Vector(), nullable=False)
+
     metadatas: Mapped[Dict[str, Any]] = mapped_column(
         "metadata",
         postgresql.JSONB,
@@ -90,13 +91,17 @@ class PGVectorCollection(Collection):
         self.table = self.build_table()
 
     def build_table(self) -> Type[CollectionTable]:
-        # class CustomCollectionTable(CollectionTable):
-        #     __tablename__ = self.name
-        #     __dimensions__ = self.dimension
-        #     __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
-        #     __table_args__ = {"extend_existing": True}
+        class CustomCollectionTable(CollectionTable):
+            __tablename__ = self.name
+            __dimensions__ = self.dimension
+            __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
+            __table_args__ = {"extend_existing": True}
 
-        # return CustomCollectionTable
+            @declared_attr
+            def embedding(cls) -> Mapped[List[float]]:
+                return mapped_column("embedding", Vector(self.dimension), nullable=False)
+
+        return CustomCollectionTable
         # Create the class dynamically
         return type(
             f"CollectionTable.{self.name}",
