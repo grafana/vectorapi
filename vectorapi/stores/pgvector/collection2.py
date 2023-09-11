@@ -67,12 +67,20 @@ class CollectionTable(AbstractConcreteBase, Base):
         #     raise RuntimeError()
         # return new
 
+    @classmethod
     async def update(
-        self, session: AsyncSession, embedding: List[float], metadata: Dict[str, Any]
-    ) -> None:
-        self.embedding = embedding
-        self.metadatas = metadata
-        await session.flush()
+        cls, session: AsyncSession, id: str, embedding: List[float], metadata: Dict[str, Any]
+    ):
+        stmt = select(cls).where(cls.id == id)
+        result = await session.execute(stmt)
+        collection = result.scalar_one_or_none()
+
+        if collection:
+            collection.embedding = embedding
+            collection.metadatas = metadata
+
+            await session.commit()
+
 
     @classmethod
     async def delete(cls, session: AsyncSession, collection: CollectionTable) -> None:
@@ -102,38 +110,13 @@ class PGVectorCollection(Collection):
                 return mapped_column("embedding", Vector(self.dimension), nullable=False)
 
         return CustomCollectionTable
-        # Create the class dynamically
-        return type(
-            f"CollectionTable.{self.name}",
-            (CollectionTable,),
-            {
-                "__tablename__": self.name,
-                "__dimensions__": self.dimension,
-                "__mapper_args__": {
-                    "polymorphic_identity": self.name,
-                    "concrete": True,
-                },
-                "__table_args__": {"extend_existing": True},
-                # "embedding": Annotated[
-                #     Mapped[List[float]],
-                #     mapped_column("embedding", Vector(self.dimension), nullable=False),
-                # ],
-            },
-        )
-
-    # def sync(self):
-    #     table_classname = f"{self.name}CollectionTable"
-    #     mydict = {
-    #         "__tablename__": self.name,
-    #         # "__table_args__": {"autoload": True},
-    #         "__dimensions__": self.dimension,
-    #     }
-    #     self.table = type(table_classname, (CollectionTable,), mydict)
 
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
-        # Implement pgvector-specific logic to insert a point into the collection
-        # You may need to use SQL queries to insert the data
-        pass
+        async with self.session_maker() as session:
+            if self.table is not None:
+                await self.table.create(
+                    session=session, id=id, embedding=embedding, metadata=metadata
+                )
 
     async def create(self) -> None:
         pass
@@ -175,15 +158,20 @@ class PGVectorCollection(Collection):
             )
 
     async def update(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
-        # Implement pgvector-specific logic to update a point in the collection
-        # You may need to use SQL queries to update the data
-        pass
-
-    async def upsert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
-        # Implement pgvector-specific logic to upsert a point in the collection
-        # You may need to use SQL queries to upsert the data
+        # Update collection point with the given id
         async with self.session_maker() as session:
             if self.table is not None:
-                await self.table.create(
-                    session=session, id=id, embedding=embedding, metadata=metadata
-                )
+                await self.table.update(session=session, id=id, embedding=embedding, metadata=metadata)
+
+    async def upsert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
+        ## I want to add some logic to insert data but if the id already exists, then update it
+        try:
+            await self.insert(id, embedding, metadata)
+        except Exception as e:
+            if is_duplicate_key_error(e.args[0]):
+                await self.update(id, embedding, metadata)
+            else:
+                raise e
+
+def is_duplicate_key_error(error_message):
+    return "duplicate key value violates unique constraint" in error_message
