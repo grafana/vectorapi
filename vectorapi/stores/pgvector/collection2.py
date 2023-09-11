@@ -154,9 +154,27 @@ class PGVectorCollection(Collection):
             await session.flush()
 
     async def query(self, query: List[float], limit: int = 10) -> List[CollectionPointResult]:
-        # Implement pgvector-specific logic to search the collection
-        # You may need to use SQL queries to search the data
-        return []
+        if self.table is None:
+            return []
+
+        stmt = select(self.table).order_by(self.table.embedding.cosine_distance(query))
+        # add column with cosine distance
+        stmt = stmt.column(self.table.embedding.cosine_distance(query).label("distance"))
+        stmt = stmt.limit(limit)
+        async with self.session_maker() as session:
+            query_execution = await session.execute(stmt)
+            results = query_execution.scalars().all()
+
+            return [
+                CollectionPointResult(
+                    id=result.id,
+                    embedding=result.embedding,
+                    metadata=result.metadatas,
+                    # score=result.distance,
+                    score=0,
+                )
+                for result in results
+            ]
 
     async def get(self, id: str) -> CollectionPoint:
         # Implement pgvector-specific logic to get a point from the collection
