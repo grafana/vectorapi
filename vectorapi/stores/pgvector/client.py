@@ -100,7 +100,7 @@ class PGVectorClient(Client):
             raise e
 
     async def list_collections(self):
-        logger.info("Listing collections..")
+        logger.info("Listing collection..")
         return [
             {"name": table.name, "dimension": table.c.embedding.type.dim}
             for table in self._metadata.tables.values()

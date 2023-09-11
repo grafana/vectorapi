@@ -159,7 +159,7 @@ class PGVectorCollection(Collection):
 
         stmt = select(self.table).order_by(self.table.embedding.cosine_distance(query))
         # add column with cosine distance
-        stmt = stmt.column(self.table.embedding.cosine_distance(query).label("distance"))
+        stmt = stmt.column(self.table.embedding.cosine_distance(query).label("distance2"))
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
