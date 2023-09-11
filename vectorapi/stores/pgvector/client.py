@@ -63,8 +63,8 @@ class PGVectorClient(Client):
     async def get_collection(self, name: str) -> Optional[Collection]:
         logger.info(f"Getting collection name={name}")
         try:
-            table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
-            if table is not None:
+            if self._collection_exists(name):
+                table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
                 return PGVectorCollection(
                     name=name,
                     dimension=table.c.embedding.type.dim,
@@ -80,8 +80,8 @@ class PGVectorClient(Client):
     async def delete_collection(self, name: str):
         logger.info(f"Deleting collection name={name}")
         try:
-            table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
-            if table is not None:
+            if self._collection_exists(name):
+                table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
                 async with self.engine.begin() as conn:
                     await conn.run_sync(table.drop)
                     self._metadata.remove(table)
@@ -99,7 +99,7 @@ class PGVectorClient(Client):
             for table in self._metadata.tables.values()
         ]
 
-    async def collection_exists(self, name: str) -> bool:
+    async def _collection_exists(self, name: str) -> bool:
         return name in self._metadata.tables.keys()
 
 
