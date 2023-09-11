@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Any, AsyncIterator, Dict, List
 from pydantic import ConfigDict, Field
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import String, select, text
+from sqlalchemy import String, select, text, delete
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, declared_attr
@@ -83,9 +84,10 @@ class CollectionTable(AbstractConcreteBase, Base):
 
 
     @classmethod
-    async def delete(cls, session: AsyncSession, collection: CollectionTable) -> None:
-        await session.delete(collection)
-        await session.flush()
+    async def delete(cls, session: AsyncSession, id: str) -> None:
+        stmt = delete(cls).where(cls.id == id)
+        await session.execute(stmt)
+        await session.commit()
 
 
 class PGVectorCollection(Collection):
@@ -113,16 +115,16 @@ class PGVectorCollection(Collection):
 
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         async with self.session_maker() as session:
-            if self.table is not None:
-                await self.table.create(
-                    session=session, id=id, embedding=embedding, metadata=metadata
-                )
+            await self.table.create(
+                session=session, id=id, embedding=embedding, metadata=metadata
+            )
 
     async def create(self) -> None:
         pass
 
-    async def delete(self) -> None:
-        pass
+    async def delete(self, id: str) -> None:
+        async with self.session_maker() as session:
+            await self.table.delete(session=session, id=id)
 
     async def query(self, query: List[float], limit: int = 10) -> List[CollectionPointResult]:
         if self.table is None:
@@ -148,11 +150,11 @@ class PGVectorCollection(Collection):
         ]
 
     async def get(self, id: str) -> CollectionPoint:
-        # Implement pgvector-specific logic to get a point from the collection
-        # You may need to use SQL queries to get the data
+        # Get collection point with the given id
         async with self.session_maker() as session:
-            if self.table is not None:
-                result = await self.table.read_by_id(session=session, point_id=id)
+            result = await self.table.read_by_id(session=session, point_id=id)
+            if result is None:
+                raise Exception(f"Point with id {id} does not exist")
             return CollectionPoint(
                 id=result.id, embedding=result.embedding, metadata=result.metadatas
             )
