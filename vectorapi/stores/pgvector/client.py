@@ -16,6 +16,20 @@ from vectorapi.stores.pgvector.db import init_db_engine
 from loguru import logger
 from vectorapi.stores.pgvector.base import Base
 
+from sqlalchemy import BLOB
+from sqlalchemy import event
+from sqlalchemy import PickleType
+from sqlalchemy import Table
+from pgvector.sqlalchemy import Vector
+from pgvector.asyncpg import register_vector
+
+
+# @event.listens_for(Table, "column_reflect")
+# def _setup_pickletype(inspector, table, column_info):
+#     print(column_info)
+#     if isinstance(column_info["type"], "Vector"):
+#         column_info["type"] = Vector()
+
 
 class PGVectorClient(Client):
     def __init__(self):
@@ -24,7 +38,6 @@ class PGVectorClient(Client):
 
     async def setup(self):
         async with self.engine.begin() as conn:
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await conn.execute(CreateSchema(SCHEMA_NAME, if_not_exists=True))
         await self.sync()
 
@@ -38,6 +51,7 @@ class PGVectorClient(Client):
         collection = PGVectorCollection(
             name=name, dimension=dimension, session_maker=self.bound_async_sessionmaker
         )
+        collection.build_table()
         try:
             async with self.engine.begin() as conn:
                 await conn.run_sync(self._metadata.create_all)
@@ -88,11 +102,7 @@ class PGVectorClient(Client):
     async def list_collections(self):
         logger.info("Listing collections..")
         return [
-            PGVectorCollection(
-                name=table.name,
-                dimension=2,
-                session_maker=self.bound_async_sessionmaker,
-            )
+            {"name": table.name, "dimension": table.c.embedding.type.dim}
             for table in self._metadata.tables.values()
         ]
 

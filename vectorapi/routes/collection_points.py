@@ -69,6 +69,33 @@ async def delete_point(
     return fastapi.Response(status_code=204)
 
 
+@router.get(
+    "/{collection_name}/get/{point_id}",
+    name="get_point",
+)
+async def get_point(
+    collection_name: str,
+    point_id: str,
+    client: StoreClient,
+):
+    """Delete a collection point with the given id."""
+    try:
+        logger.debug(f"Getting collection {collection_name}")
+        collection = await client.get_collection(collection_name)
+        if collection is None:
+            raise fastapi.HTTPException(
+                status_code=404,
+                detail=f"Collection with name {collection_name} does not exist",
+            )
+        logger.debug(f"Getting point {point_id}")
+        return await collection.get(point_id)
+    except Exception as e:
+        raise fastapi.HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
 class QueryPointRequest(BaseModel):
     query: List[float]
     top_k: int = 10
