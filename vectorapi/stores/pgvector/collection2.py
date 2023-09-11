@@ -138,20 +138,8 @@ class PGVectorCollection(Collection):
     async def create(self) -> None:
         pass
 
-        # create_expression = CreateTable(self.table, if_not_exists=True)
-        # async with self.session_maker() as session:
-        #     await session.execute(create_expression)
-        #     await session.commit()
-
-        # async with self.session_maker() as session:
-
-        #     session.add(self.table)
-        #     await session.flush()
-
     async def delete(self) -> None:
-        async with self.session_maker() as session:
-            await session.delete(self.table)
-            await session.flush()
+        pass
 
     async def query(self, query: List[float], limit: int = 10) -> List[CollectionPointResult]:
         if self.table is None:
