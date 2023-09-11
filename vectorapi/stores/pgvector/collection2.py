@@ -163,18 +163,18 @@ class PGVectorCollection(Collection):
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
-            results = query_execution.scalars().all()
+            ## After adding column distance2 to stmt, the result is a tuple of (CollectionTable, distance2)
+            results = query_execution.all()
 
-            return [
-                CollectionPointResult(
-                    id=result.id,
-                    embedding=result.embedding,
-                    metadata=result.metadatas,
-                    # score=result.distance,
-                    score=0,
-                )
-                for result in results
-            ]
+        return [
+            CollectionPointResult(
+                id=result[0].id,
+                embedding=result[0].embedding,
+                metadata=result[0].metadatas,
+                score=result[1],
+            )
+            for result in results
+        ]
 
     async def get(self, id: str) -> CollectionPoint:
         # Implement pgvector-specific logic to get a point from the collection
