@@ -61,7 +61,21 @@ class PGVectorClient(Client):
         return collection
 
     async def get_collection(self, name: str) -> Optional[Collection]:
-        pass
+        logger.info(f"Getting collection name={name}")
+        try:
+            table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
+            if table is not None:
+                return PGVectorCollection(
+                    name=name,
+                    dimension=table.c.embedding.type.dim,
+                    session_maker=self.bound_async_sessionmaker,
+                )
+            else:
+                logger.info(f"Table {name} does not exist")
+                return None
+        except Exception as e:
+            logger.exception(e)
+            raise e
 
     async def delete_collection(self, name: str):
         logger.info(f"Deleting collection name={name}")
