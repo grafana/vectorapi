@@ -13,13 +13,14 @@ from vectorapi.models.collection import CollectionPoint, CollectionPointResult
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from vectorapi.stores.pgvector.base import Base
 from typing import Type
+from typing import Annotated
 
 
 class CollectionTable(AbstractConcreteBase, Base):
     __abstract__ = True
-    __dimensions__ = 0
+    __dimensions__ = 2
 
-    strict_attrs = True
+    # strict_attrs = True
     id: Mapped[str] = mapped_column(
         "id", String, autoincrement=False, nullable=False, unique=True, primary_key=True
     )
@@ -43,34 +44,33 @@ class CollectionTable(AbstractConcreteBase, Base):
             yield row
 
     @classmethod
-    async def read_by_id(
-        cls, session: AsyncSession, collection_id: str, include_metadata: bool = False
-    ) -> CollectionTable | None:
-        stmt = select(cls).where(cls.id == collection_id)
+    async def read_by_id(cls, session: AsyncSession, point_id: str, include_metadata: bool = False):
+        stmt = select(cls).where(cls.id == point_id)
         return await session.scalar(stmt.order_by(cls.id))
 
     @classmethod
     async def create(
         cls, session: AsyncSession, id: str, embedding: List[float], metadata: Dict[str, Any]
-    ) -> CollectionTable:
-        collection = CollectionTable(
+    ):
+        collection = cls(
             id=id,
             embedding=embedding,
-            metadata=metadata,
+            metadatas=metadata,
         )
         session.add(collection)
+        await session.commit()
         await session.flush()
-        # To fetch metadata
-        new = await cls.read_by_id(session, collection.id, include_metadata=True)
-        if not new:
-            raise RuntimeError()
-        return new
+        # # To fetch metadata
+        # new = await cls.read_by_id(session, collection.id, include_metadata=True)
+        # if not new:
+        #     raise RuntimeError()
+        # return new
 
     async def update(
         self, session: AsyncSession, embedding: List[float], metadata: Dict[str, Any]
     ) -> None:
         self.embedding = embedding
-        self.metadata = metadata
+        self.metadatas = metadata
         await session.flush()
 
     @classmethod
@@ -81,20 +81,40 @@ class CollectionTable(AbstractConcreteBase, Base):
 
 class PGVectorCollection(Collection):
     session_maker: async_sessionmaker[AsyncSession] = Field(..., exclude=True)
-    # table: Type[CollectionTable] = Field(exclude=True)
+    table: Type[CollectionTable] | None = Field(default=None, exclude=True)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    @property
-    def table(self) -> CollectionTable:
-        # Create the class dynamically
-        class CustomCollectionTable(CollectionTable):
-            __tablename__ = self.name
-            __dimensions__ = self.dimension
-            __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
-            __table_args__ = {"extend_existing": True, "autoload": True}
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.table = self.build_table()
 
-        return CustomCollectionTable()
+    def build_table(self) -> Type[CollectionTable]:
+        # class CustomCollectionTable(CollectionTable):
+        #     __tablename__ = self.name
+        #     __dimensions__ = self.dimension
+        #     __mapper_args__ = {"polymorphic_identity": self.name, "concrete": True}
+        #     __table_args__ = {"extend_existing": True}
+
+        # return CustomCollectionTable
+        # Create the class dynamically
+        return type(
+            f"CollectionTable.{self.name}",
+            (CollectionTable,),
+            {
+                "__tablename__": self.name,
+                "__dimensions__": self.dimension,
+                "__mapper_args__": {
+                    "polymorphic_identity": self.name,
+                    "concrete": True,
+                },
+                "__table_args__": {"extend_existing": True},
+                # "embedding": Annotated[
+                #     Mapped[List[float]],
+                #     mapped_column("embedding", Vector(self.dimension), nullable=False),
+                # ],
+            },
+        )
 
     # def sync(self):
     #     table_classname = f"{self.name}CollectionTable"
@@ -133,12 +153,15 @@ class PGVectorCollection(Collection):
         # You may need to use SQL queries to search the data
         return []
 
-    async def get(self, id: str) -> CollectionPointResult:
+    async def get(self, id: str) -> CollectionPoint:
         # Implement pgvector-specific logic to get a point from the collection
         # You may need to use SQL queries to get the data
         async with self.session_maker() as session:
-            result = await self.table.read_by_id(session=session, collection_id=id)
-        return result
+            if self.table is not None:
+                result = await self.table.read_by_id(session=session, point_id=id)
+            return CollectionPoint(
+                id=result.id, embedding=result.embedding, metadata=result.metadatas
+            )
 
     async def update(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         # Implement pgvector-specific logic to update a point in the collection
@@ -149,4 +172,7 @@ class PGVectorCollection(Collection):
         # Implement pgvector-specific logic to upsert a point in the collection
         # You may need to use SQL queries to upsert the data
         async with self.session_maker() as session:
-            await self.table.create(session=session, id=id, embedding=embedding, metadata=metadata)
+            if self.table is not None:
+                await self.table.create(
+                    session=session, id=id, embedding=embedding, metadata=metadata
+                )
