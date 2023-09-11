@@ -61,40 +61,18 @@ class PGVectorClient(Client):
         return collection
 
     async def get_collection(self, name: str) -> Optional[Collection]:
-        logger.info(f"Getting collection name={name}")
-        # table = self._metadata.tables.get(f"{self._metadata.schema}.{name}")
-        ## How to get the dimension of the collection?
-        table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
-        if table is not None:
-            logger.info(f"Found table: {table}")
-            # logger.info(table.__dict__)
-            ##TODO: Need to get the dimension of the collection.
-            ## Also there is no need to create a new collection here.
-            collection = PGVectorCollection(
-                name=name, dimension=2, session_maker=self.bound_async_sessionmaker
-            )
-
-            return collection
-        return None
+        pass
 
     async def delete_collection(self, name: str):
         logger.info(f"Deleting collection name={name}")
-        ## TODO: adopt a consistent implemetation with create_collection.
         try:
-            table = self._metadata.tables.get(f"{self._metadata.schema}.{name}")
+            table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
             if table is not None:
-                logger.info(f"Found table: {table}")
-                drop_expression = DropTable(table)
-                logger.info(drop_expression)
-
-                async with self.bound_async_sessionmaker() as session:
-                    await session.execute(drop_expression)
-                    await session.commit()
-                self._metadata.remove(table)
+                async with self.engine.begin() as conn:
+                    await conn.run_sync(table.drop)
             else:
                 logger.info(f"Table {name} does not exist")
-                raise ValueError(f"Table {name} does not exist")
-
+                raise Exception(f"Table {name} does not exist")
         except Exception as e:
             logger.exception(e)
             raise e
