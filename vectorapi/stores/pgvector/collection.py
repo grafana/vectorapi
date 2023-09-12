@@ -1,19 +1,17 @@
 from __future__ import annotations
 
-import os
-from typing import Any, AsyncIterator, Dict, List
-from pydantic import ConfigDict, Field
+from typing import Any, AsyncIterator, Dict, List, Type
+
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import String, select, text, delete
+from pydantic import ConfigDict, Field
+from sqlalchemy import String, delete, select, text
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
-from sqlalchemy.orm import Mapped, mapped_column, declared_attr
-from vectorapi.models.collection import Collection
-from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+
+from vectorapi.models.collection import Collection, CollectionPoint, CollectionPointResult
 from vectorapi.stores.pgvector.base import Base
-from typing import Type
 
 
 class CollectionTable(AbstractConcreteBase, Base):
@@ -76,7 +74,6 @@ class CollectionTable(AbstractConcreteBase, Base):
 
             await session.commit()
 
-
     @classmethod
     async def delete(cls, session: AsyncSession, id: str) -> None:
         stmt = delete(cls).where(cls.id == id)
@@ -109,9 +106,7 @@ class PGVectorCollection(Collection):
 
     async def insert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         async with self.session_maker() as session:
-            await self.table.create(
-                session=session, id=id, embedding=embedding, metadata=metadata
-            )
+            await self.table.create(session=session, id=id, embedding=embedding, metadata=metadata)
 
     async def create(self) -> None:
         pass
@@ -126,7 +121,9 @@ class PGVectorCollection(Collection):
 
         stmt = select(self.table).order_by(self.table.embedding.cosine_distance(query))
         # add column with cosine similarity
-        stmt = stmt.column((1-self.table.embedding.cosine_distance(query)).label("cosine_similarity"))
+        stmt = stmt.column(
+            (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
+        )
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
@@ -135,9 +132,11 @@ class PGVectorCollection(Collection):
 
         return [
             CollectionPointResult(
-                id=result[0].id,
-                embedding=result[0].embedding,
-                metadata=result[0].metadatas,
+                payload=CollectionPoint(
+                    id=result[0].id,
+                    embedding=result[0].embedding,
+                    metadata=result[0].metadatas,
+                ),
                 score=result[1],
             )
             for result in results
@@ -157,7 +156,9 @@ class PGVectorCollection(Collection):
         # Update collection point with the given id
         async with self.session_maker() as session:
             if self.table is not None:
-                await self.table.update(session=session, id=id, embedding=embedding, metadata=metadata)
+                await self.table.update(
+                    session=session, id=id, embedding=embedding, metadata=metadata
+                )
 
     async def upsert(self, id: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> None:
         try:
@@ -167,6 +168,7 @@ class PGVectorCollection(Collection):
                 await self.update(id, embedding, metadata)
             else:
                 raise e
+
 
 def is_duplicate_key_error(error_message):
     return "duplicate key value violates unique constraint" in error_message

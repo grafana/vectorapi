@@ -81,9 +81,11 @@ class NumpyCollection(Collection):
 
         return [
             CollectionPointResult(
-                id=self.ids[i],
-                embedding=self.vectors[i],
-                metadata=self.metadatas[self.ids[i]],
+                payload=CollectionPoint(
+                    id=self.ids[i],
+                    embedding=self.vectors[i],
+                    metadata=self.metadatas[self.ids[i]],
+                ),
                 score=similarities[i],
             )
             for i in top_k_idx
