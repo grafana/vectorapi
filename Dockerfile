@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 FROM python:3.11-bullseye
 
 ENV POETRY_VERSION=1.6.1 \
