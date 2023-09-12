@@ -14,6 +14,7 @@ def init_db_engine():
         pool_pre_ping=True,
         echo=settings.ECHO_SQL,
     )
+
     @event.listens_for(async_engine.sync_engine, "connect")
     def register_vector(dbapi_connection: AdaptedConnection, *args):
         stmt = "CREATE EXTENSION IF NOT EXISTS vector"
