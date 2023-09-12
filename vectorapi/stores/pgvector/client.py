@@ -78,4 +78,4 @@ class PGVectorClient(Client):
         ]
 
     def _collection_exists(self, name: str) -> bool:
-        return name in self._metadata.tables.keys()
+        return f"{SCHEMA_NAME}.{name}" in self._metadata.tables.keys()
