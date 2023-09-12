@@ -1,0 +1,44 @@
+---
+# Build and push 'latest' Docker image.
+
+kind: pipeline
+type: docker
+name: Docker build
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  # Push the docker image on main/tags.
+  - name: Push Docker Image
+    image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: 1
+    settings:
+      repo: us.gcr.io/kubernetes-dev/vectorapi
+      config:
+        from_secret: gcr_admin
+      tags:
+        - latest
+    when:
+      ref:
+        - refs/heads/main
+        - refs/heads/add-drone-ci
+        - refs/tags/v*.*.*
+
+---
+# Secret for pulling docker images.
+kind: secret
+name: dockerconfigjson
+get:
+  path: secret/data/common/gcr
+  name: .dockerconfigjson
+
+---
+# Secret for pushing docker images.
+kind: secret
+name: gcr_admin
+get:
+  path: infra/data/ci/gcr-admin
+  name: .dockerconfigjson
