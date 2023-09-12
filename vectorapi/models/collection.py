@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 
 
 class CollectionPoint(BaseModel):
     id: str
-    embedding: List[float]
+    embedding: List[float] = []
     metadata: Dict[str, Any] = {}
 
 
@@ -15,7 +15,7 @@ class CollectionPointResult(BaseModel):
     score: float
 
 
-class Collection(BaseModel, ABC):
+class Collection(BaseModel, ABC, extra=Extra.allow):
     name: str
     dimension: int
 

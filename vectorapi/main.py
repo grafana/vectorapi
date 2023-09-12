@@ -1,5 +1,6 @@
 """main.py is the entrypoint of the gateway."""
 import os
+from contextlib import asynccontextmanager
 
 import fastapi
 import loguru
@@ -20,6 +21,8 @@ from vectorapi import log, responses
 from vectorapi.routes.collection_points import router as collection_points_router
 from vectorapi.routes.collections import router as collections_router
 from vectorapi.routes.embeddings import router as embeddings_routers
+from vectorapi.stores.store_client import client
+import uvicorn
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
@@ -45,12 +48,22 @@ async def health(request: fastapi.Request):
     return Response("OK", status_code=fastapi.status.HTTP_200_OK)
 
 
+@asynccontextmanager
+async def lifespan(app: fastapi.FastAPI):
+    # executed before the application starts taking requests
+    await client.setup()
+    yield
+
+    # executed after the application finishes handling requests
+    await client.teardown()
+
+
 def create_app() -> fastapi.FastAPI:
     """create_app instantiates the FastAPI app."""
     if JAEGER_HOST:
         initialize_tracing()
 
-    app = fastapi.FastAPI(default_response_class=responses.ORJSONResponse)
+    app = fastapi.FastAPI(default_response_class=responses.ORJSONResponse, lifespan=lifespan)
     logger = loguru.logger.patch(log.add_trace_id)
     app.add_middleware(RouteLoggerMiddleware, logger=logger)
     app.add_middleware(
@@ -73,3 +86,12 @@ def create_app() -> fastapi.FastAPI:
 
 uvloop.install()
 app = create_app()
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", 8889)),
+        log_level="debug",
+    )
