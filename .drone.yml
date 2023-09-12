@@ -15,8 +15,10 @@ steps:
     image: plugins/docker
     environment:
       DOCKER_BUILDKIT: 1
+      BUILDKIT_INLINE_CACHE: 1
     settings:
       repo: us.gcr.io/kubernetes-dev/vectorapi
+      cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
       config:
         from_secret: gcr_admin
       tags:
