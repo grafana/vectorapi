@@ -78,7 +78,7 @@ async def get_point(
     point_id: str,
     client: StoreClient,
 ):
-    """Delete a collection point with the given id."""
+    """Get the collection point matching the given id."""
     try:
         logger.debug(f"Getting collection {collection_name}")
         collection = await client.get_collection(collection_name)

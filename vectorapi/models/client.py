@@ -35,7 +35,3 @@ class Client(ABC):
 
     async def teardown(self):
         pass
-
-    # @abstractmethod
-    # async def update_collection(self, name: str, dimension: int):
-    #     pass
