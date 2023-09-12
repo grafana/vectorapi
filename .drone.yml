@@ -25,7 +25,6 @@ steps:
       ref:
         - refs/heads/main
         - refs/heads/add-drone-ci
-        - refs/tags/v*.*.*
 
 ---
 # Secret for pulling docker images.
