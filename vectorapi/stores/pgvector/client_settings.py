@@ -1,16 +1,19 @@
+import os
 from pydantic_settings import BaseSettings
 from pydantic import PostgresDsn, validator
 
 from typing import Any
 
+SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME", "vector")
+
 
 class Settings(BaseSettings):
     # PostgreSQL Database Connection
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "mysecretpassword"
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: str = "5432"
-    POSTGRES_DB: str = "postgres"
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "")
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "0000")
+    POSTGRES_DB: str = os.getenv("POSTGRES_DB", "postgres")
     ECHO_SQL: bool = True
     SQLALCHEMY_DATABASE_URL: PostgresDsn | None = None
 

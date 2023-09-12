@@ -1,9 +1,6 @@
-from typing import Any, Optional, Sequence as _typing_Sequence, Union
 from sqlalchemy import MetaData
-from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import DeclarativeBase
-from vectorapi.stores.pgvector.collection import SCHEMA_NAME
-from typing import Sequence
+from vectorapi.stores.pgvector.client_settings import SCHEMA_NAME
 
 convention = {
     "ix": "ix_%(column_0_label)s",
