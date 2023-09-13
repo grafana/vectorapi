@@ -15,18 +15,20 @@ steps:
     image: plugins/docker
     environment:
       DOCKER_BUILDKIT: 1
-      BUILDKIT_INLINE_CACHE: 1
     settings:
       repo: us.gcr.io/kubernetes-dev/vectorapi
       cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
+      build_args:
+        - BUILDKIT_INLINE_CACHE=1
       config:
         from_secret: gcr_admin
       tags:
         - latest
+        - ${DRONE_COMMIT_SHA:0:10}
     when:
       ref:
         - refs/heads/main
-        - refs/heads/add-drone-ci
+        - refs/heads/drone-add-hash
 
 ---
 # Secret for pulling docker images.
