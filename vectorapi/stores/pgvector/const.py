@@ -1,3 +1,3 @@
 import os
 
-VECTORDB_SCHEMA = os.getenv("VECTORDB_SCHEMA", "vector")
+VECTORAPI_STORE_SCHEMA = os.getenv("VECTORAPI_STORE_SCHEMA", "vector")

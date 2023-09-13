@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from vectorapi.stores.pgvector.client_settings import settings
-from vectorapi.stores.pgvector.const import VECTORDB_SCHEMA
+from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
 from sqlalchemy.schema import CreateSchema
 
 
@@ -24,7 +24,7 @@ def init_db_engine():
         dbapi_connection.run_async(lambda conn: conn.execute(create_extension))
 
         # create schema if it doesn't exist yet
-        create_vectordb_schema = CreateSchema(VECTORDB_SCHEMA, if_not_exists=True)
+        create_vectordb_schema = CreateSchema(VECTORAPI_STORE_SCHEMA, if_not_exists=True)
         dbapi_connection.run_async(
             lambda conn: conn.execute(create_vectordb_schema.compile().string)
         )
@@ -46,7 +46,7 @@ def init_db_engine():
                     NOT attisdropped
                     AND pg_attribute.attname = 'embedding'
                     AND rel.relkind = 'r'
-                    AND pg_namespace.nspname = '{VECTORDB_SCHEMA}'
+                    AND pg_namespace.nspname = '{VECTORAPI_STORE_SCHEMA}'
                     AND rel.relname = '{table.name}'
                 """
             with inspector.engine.begin() as conn:

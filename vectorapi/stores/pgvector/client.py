@@ -6,7 +6,7 @@ from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
 from vectorapi.stores.pgvector.base import Base
 from vectorapi.stores.pgvector.collection import PGVectorCollection
-from vectorapi.stores.pgvector.const import VECTORDB_SCHEMA
+from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.stores.pgvector.db import init_db_engine
 
 
@@ -40,7 +40,7 @@ class PGVectorClient(Client):
         logger.info(f"Getting collection name={name}")
         try:
             if self._collection_exists(name):
-                table = self._metadata.tables.get(f"{VECTORDB_SCHEMA}.{name}")
+                table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
                 return PGVectorCollection(
                     name=name,
                     dimension=table.c.embedding.type.dim,
@@ -57,7 +57,7 @@ class PGVectorClient(Client):
         logger.info(f"Deleting collection name={name}")
         try:
             if self._collection_exists(name):
-                table = self._metadata.tables.get(f"{VECTORDB_SCHEMA}.{name}")
+                table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
                 async with self.engine.begin() as conn:
                     await conn.run_sync(table.drop)
                     self._metadata.remove(table)
@@ -76,4 +76,4 @@ class PGVectorClient(Client):
         ]
 
     def _collection_exists(self, name: str) -> bool:
-        return f"{VECTORDB_SCHEMA}.{name}" in self._metadata.tables.keys()
+        return f"{VECTORAPI_STORE_SCHEMA}.{name}" in self._metadata.tables.keys()
