@@ -2,6 +2,13 @@
 ### Runtime base image ###
 FROM python:3.11-slim-bullseye AS runtime-base
 
+# add htop for monitoring
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt \
+  apt update \
+  && apt install --no-install-recommends -y htop \ 
+  && rm -rf /var/lib/apt/lists/*
+
 # pin the version of poetry we install
 ENV POETRY_VERSION=1.6.1 \
   # make poetry install to this location so we can add it to PATH
