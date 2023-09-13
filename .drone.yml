@@ -19,10 +19,12 @@ steps:
     settings:
       repo: us.gcr.io/kubernetes-dev/vectorapi
       cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
+      auto_tag: true
       config:
         from_secret: gcr_admin
       tags:
         - latest
+        - ${DRONE_COMMIT_SHA:0:10}
     when:
       ref:
         - refs/heads/main
