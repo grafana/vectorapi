@@ -10,3 +10,5 @@
 **/.sentence_transformers
 **/.vscode
 Dockerfile
+docker-compose.yaml
+.venv

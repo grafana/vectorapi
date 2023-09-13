@@ -18,6 +18,7 @@ steps:
     settings:
       repo: us.gcr.io/kubernetes-dev/vectorapi
       cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
+      target: production
       build_args:
         - BUILDKIT_INLINE_CACHE=1
       config:
@@ -28,7 +29,6 @@ steps:
     when:
       ref:
         - refs/heads/main
-        - refs/heads/drone-add-hash
 
 ---
 # Secret for pulling docker images.

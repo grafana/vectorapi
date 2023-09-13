@@ -1,41 +1,75 @@
 # syntax=docker/dockerfile:1.4
-FROM python:3.11-bullseye
+### Runtime base image ###
+FROM python:3.11-slim-bullseye AS runtime-base
 
+# pin the version of poetry we install
 ENV POETRY_VERSION=1.6.1 \
   # make poetry install to this location so we can add it to PATH
   POETRY_HOME="/opt/.poetry" \
   # set cache folder
   XDG_CACHE_HOME="/opt/.cache" \
   # don't show message for pip updates
-  PIP_DISABLE_PIP_VERSION_CHECK=1
+  PIP_DISABLE_PIP_VERSION_CHECK=1 \
+  # install poetry deps in the .venv folder so we can easily copy it in multi-stage build
+  POETRY_VIRTUALENVS_IN_PROJECT=true \
+  # set cache directory to a fixed directory
+  XDG_CACHE_HOME="/opt/.cache" \
+  # this is where our requirements + virtual environment will live
+  APP_PATH="/app" \
+  VENV_PATH="/app/.venv"
+
+# prepend poetry and venv to path
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+WORKDIR $APP_PATH
+
+#### Builder image with poetry and build dependencies ####
+FROM runtime-base as builder
+
+# we need curl to get the poetry install script
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+RUN --mount=type=cache,target=/var/cache/apt \
+  apt update \
+  && apt install --no-install-recommends -y curl build-essential
 
 # install poetry in a vendorised way so its dependencies are isolated and don't clash with our project
-RUN --mount=type=cache,target=${XDG_CACHE_HOME}/pip \
-  curl -sSL https://install.python-poetry.org | python -
+# pin install-poetry script to specific commit instead of master branch for security + reproducibility (script can't change under our feet)
+RUN --mount=type=cache,target=$XDG_CACHE_HOME/pip \
+  curl -sSL https://raw.githubusercontent.com/python-poetry/install.python-poetry.org/fcd759d6feb9142736a19f8a753be975a120be87/install-poetry.py | python
 
-# set PATH so we can run poetry commands
-ENV PATH="$POETRY_HOME/bin:$PATH"
-
-# set poetry config to install to system instead of virtualenv
-ENV POETRY_VIRTUALENVS_CREATE=false
-
-# store sentence_transformers in mounted path to avoid-redownloading
-RUN mkdir -p /app/.sentence_transformers
-ENV SENTENCE_TRANSFORMERS_HOME=/app/.sentence_transformers
-RUN mkdir -p /app/.tiktoken
-ENV TIKTOKEN_CACHE_DIR=/app/.tiktoken
-
-# Install dependencies
-RUN --mount=type=cache,target=${XDG_CACHE_HOME}/pip \
-  pip install -U pip setuptools wheel
-
+#### Install dependencies ####
+FROM builder AS builder-with-deps
 COPY --link ./pyproject.toml ./poetry.lock ./
+RUN --mount=type=cache,target=${XDG_CACHE_HOME}/pypoetry/cache \
+  --mount=type=cache,target=${XDG_CACHE_HOME}/pypoetry/artifacts \
+  poetry install --no-root --only main
+
+FROM builder-with-deps AS builder-with-dev-deps
+# install dev-dependencies
 RUN --mount=type=cache,target=${XDG_CACHE_HOME}/pypoetry/cache \
   --mount=type=cache,target=${XDG_CACHE_HOME}/pypoetry/artifacts \
   poetry install --no-root
 
-WORKDIR /app
-COPY --link . .
+#### Final runtime images ####
+FROM runtime-base AS runtime
+
+# store sentence_transformers in mounted path to avoid-redownloading
+RUN mkdir -p ${APP_PATH}/.sentence_transformers
+ENV SENTENCE_TRANSFORMERS_HOME=${APP_PATH}/.sentence_transformers
+RUN mkdir -p ${APP_PATH}/.tiktoken
+ENV TIKTOKEN_CACHE_DIR=${APP_PATH}/.tiktoken
 
 ENV MODULE_NAME="vectorapi.main"
-CMD ["/bin/bash", "-c", "uvicorn ${MODULE_NAME}:app --host ${HOST:-0.0.0.0} --port ${PORT:-80} --log-level ${LOGLEVEL:-debug} --reload"]
+
+FROM runtime AS development
+COPY --link --from=builder-with-dev-deps $POETRY_HOME $POETRY_HOME
+COPY --link --from=builder-with-dev-deps $VENV_PATH $VENV_PATH
+
+# copy code in final step (unfortunately duplicated between prod/dev) for improved caching
+COPY --link . .
+CMD ["/bin/bash", "-c", "uvicorn ${MODULE_NAME}:app --host ${HOST:-0.0.0.0} --port ${PORT:-80} --reload --log-level ${LOGLEVEL:-trace}"]
+
+FROM runtime AS production
+COPY --link --from=builder-with-deps $VENV_PATH $VENV_PATH
+
+COPY --link . .
+CMD ["/bin/bash", "-c", "uvicorn ${MODULE_NAME}:app --host ${HOST:-0.0.0.0} --port ${PORT:-80} --log-level ${LOGLEVEL:-debug}"]
