@@ -28,7 +28,7 @@ steps:
     when:
       ref:
         - refs/heads/main
-        - refs/heads/add-drone-ci
+        - refs/heads/drone-add-hash
 
 ---
 # Secret for pulling docker images.
