@@ -24,6 +24,13 @@ pgvector = "^0.2.1"
 asyncpg = "^0.28.0"
 pydantic-settings = "^2.0.3"
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.20" }
+# force torch cpu install
+torch = [
+    { markers = "sys_platform == 'linux' and platform_machine == 'x86_64'", source = "pytorch-cpu", version = "2.0.1+cpu" },
+    { markers = "sys_platform == 'linux' and platform_machine == 'aarch64'", url = "https://download.pytorch.org/whl/torch-2.0.1-cp311-cp311-manylinux2014_aarch64.whl" },
+    { markers = "sys_platform == 'darwin' and platform_machine == 'arm64'", url = "https://download.pytorch.org/whl/cpu/torch-2.0.1-cp311-none-macosx_11_0_arm64.whl" },
+    { markers = "(sys_platform == 'linux' and (platform_machine != 'x86_64' and platform_machine != 'aarch64')) or (sys_platform == 'darwin' and platform_machine != 'arm64')", version = "2.0.1" },
+]
 
 [tool.poetry.group.dev.dependencies]
 black = "23.7.0"
@@ -38,6 +45,11 @@ ruff = "0.0.286"
 types-orjson = "3.6.2"
 types-redis = "4.6.0.5"
 pytest-httpx = "^0.23.1"
+
+[[tool.poetry.source]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [tool.black]
 line-length = 100
