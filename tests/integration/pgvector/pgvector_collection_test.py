@@ -8,7 +8,7 @@ from vectorapi.models.collection import CollectionPoint, CollectionPointResult
 from vectorapi.stores.pgvector.exceptions import CollectionPointNotFound
 
 
-TEST_SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME")
+TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
 
 
@@ -107,15 +107,21 @@ class TestPGVectorCollection:
         # Query points
         results = await collection.query([1.0, 2.0], limit=2)
         assert len(results) == 2
+
         assert isinstance(results[0], CollectionPointResult)
-        assert results[0].id == "1"
-        assert results[0].embedding == [1.0, 2.0]
-        assert results[0].metadata == {}
+        payload_1 = results[0].payload
+        assert isinstance(payload_1, CollectionPoint)
+        assert payload_1.id == "1"
+        assert payload_1.embedding == [1.0, 2.0]
+        assert payload_1.metadata == {}
         assert results[0].score == 1.0
+
         assert isinstance(results[1], CollectionPointResult)
-        assert results[1].id == "2"
-        assert results[1].embedding == [2.0, 3.0]
-        assert results[1].metadata == {}
+        payload_2 = results[1].payload
+        assert isinstance(payload_2, CollectionPoint)
+        assert payload_2.id == "2"
+        assert payload_2.embedding == [2.0, 3.0]
+        assert payload_2.metadata == {}
         assert round(results[1].score, 6) == 0.992278
 
         # Cleanup
