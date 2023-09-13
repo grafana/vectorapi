@@ -8,6 +8,7 @@ from vectorapi.stores.pgvector.base import Base
 from vectorapi.stores.pgvector.collection import PGVectorCollection
 from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.stores.pgvector.db import init_db_engine
+from vectorapi.stores.pgvector.exceptions import CollectionNotFound
 
 
 class PGVectorClient(Client):
@@ -47,8 +48,7 @@ class PGVectorClient(Client):
                     session_maker=self.bound_async_sessionmaker,
                 )
             else:
-                logger.info(f"Table {name} does not exist")
-                return None
+                raise CollectionNotFound(f"Table {name} does not exist in schema {VECTORAPI_STORE_SCHEMA}")
         except Exception as e:
             logger.exception(e)
             raise e
@@ -62,8 +62,7 @@ class PGVectorClient(Client):
                     await conn.run_sync(table.drop)
                     self._metadata.remove(table)
             else:
-                logger.info(f"Table {name} does not exist")
-                raise Exception(f"Table {name} does not exist")
+                raise CollectionNotFound(f"Table {name} does not exist in schema {VECTORAPI_STORE_SCHEMA}")
         except Exception as e:
             logger.exception(e)
             raise e

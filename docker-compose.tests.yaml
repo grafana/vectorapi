@@ -20,8 +20,8 @@ services:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_PORT: 5432
       POSTGRES_DB: postgres
-      POSTGRES_SCHEMA_NAME: test_schema
-      VECTORDB_CLIENT: pgvector
+      VECTORAPI_STORE_SCHEMA: test_schema
+      VECTORAPI_STORE_CLIENT: pgvector
       PORT: 8889
     depends_on:
       - db

@@ -12,7 +12,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
 
 
-TEST_SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME")
+TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection"
 
 
