@@ -16,7 +16,7 @@ TEST_SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME")
 test_collection_name = "test_collection"
 
 
-class TestPGVectorClient_Integration:
+class TestPGVectorClient:
     
     @pytest_asyncio.fixture()
     async def client(self) -> Client:
