@@ -26,3 +26,8 @@ docs: env
 	poetry run python -m scripts.generate_apidoc > ./docs/apidocs.html
 	poetry run python -m scripts.generate_openapijson > ./docs/openapi.json
 .PHONY: docs
+
+integration: 
+	docker compose -f docker-compose.tests.yaml up --build --abort-on-container-exit
+	docker compose -f docker-compose.tests.yaml down
+.PHONY: integration
