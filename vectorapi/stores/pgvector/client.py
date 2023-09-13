@@ -1,13 +1,13 @@
 from typing import Optional
 
+from loguru import logger
+
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
-from vectorapi.stores.pgvector.collection import PGVectorCollection
-
-from sqlalchemy.schema import CreateSchema
-from vectorapi.stores.pgvector.db import init_db_engine, SCHEMA_NAME
-from loguru import logger
 from vectorapi.stores.pgvector.base import Base
+from vectorapi.stores.pgvector.collection import PGVectorCollection
+from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
+from vectorapi.stores.pgvector.db import init_db_engine
 
 
 class PGVectorClient(Client):
@@ -16,8 +16,6 @@ class PGVectorClient(Client):
         self._metadata = Base.metadata
 
     async def setup(self):
-        async with self.engine.begin() as conn:
-            await conn.execute(CreateSchema(SCHEMA_NAME, if_not_exists=True))
         await self.sync()
 
     async def sync(self):
@@ -42,7 +40,7 @@ class PGVectorClient(Client):
         logger.info(f"Getting collection name={name}")
         try:
             if self._collection_exists(name):
-                table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
+                table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
                 return PGVectorCollection(
                     name=name,
                     dimension=table.c.embedding.type.dim,
@@ -59,7 +57,7 @@ class PGVectorClient(Client):
         logger.info(f"Deleting collection name={name}")
         try:
             if self._collection_exists(name):
-                table = self._metadata.tables.get(f"{SCHEMA_NAME}.{name}")
+                table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
                 async with self.engine.begin() as conn:
                     await conn.run_sync(table.drop)
                     self._metadata.remove(table)
@@ -78,4 +76,4 @@ class PGVectorClient(Client):
         ]
 
     def _collection_exists(self, name: str) -> bool:
-        return f"{SCHEMA_NAME}.{name}" in self._metadata.tables.keys()
+        return f"{VECTORAPI_STORE_SCHEMA}.{name}" in self._metadata.tables.keys()

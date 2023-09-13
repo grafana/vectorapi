@@ -7,7 +7,7 @@ from vectorapi.models.client import Client
 from vectorapi.stores.numpy.client import NumpyClient
 from vectorapi.stores.pgvector.client import PGVectorClient
 
-VECTORDB_CLIENT = os.environ.get("VECTORDB_CLIENT", "pgvector")
+VECTORAPI_STORE_CLIENT = os.environ.get("VECTORAPI_STORE_CLIENT", "pgvector")
 
 
 def init_client(client: str) -> Client:
@@ -22,7 +22,7 @@ def init_client(client: str) -> Client:
         raise NotImplementedError(f"Client {client} not implemented")
 
 
-client = init_client(VECTORDB_CLIENT)
+client = init_client(VECTORAPI_STORE_CLIENT)
 
 
 async def get_client() -> Client:
