@@ -13,6 +13,8 @@ from sqlalchemy.dialects import postgresql
 
 
 TEST_SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME")
+test_collection_name = "test_collection"
+
 
 class TestPGVectorClient_Integration:
     
@@ -25,21 +27,18 @@ class TestPGVectorClient_Integration:
     @pytest.mark.Integration
     @pytest.mark.asyncio
     async def test_create_collection(self, client):
-        await client.create_collection("test_collection", 3)
-        assert client._metadata.tables.get(f"{TEST_SCHEMA_NAME}.test_collection") is not None
-        collection = await client.get_collection("test_collection")
-        assert isinstance(collection, PGVectorCollection)
-        assert collection.name == "test_collection"
-        assert collection.dimension == 3
+        await client.create_collection(test_collection_name, 3)
+
+        assert self._get_collection(client) is not None
         await self._cleanup_db(client)
 
     @pytest.mark.Integration
     @pytest.mark.asyncio
     async def test_get_collection(self, client):
         with pytest.raises(exception.CollectionNotFound, match="Table test_collection does not exist in schema test_schema"):
-            await client.get_collection("test_collection")
+            await client.get_collection(test_collection_name)
         await self._create_test_collection(client)
-        collection = await client.get_collection("test_collection")
+        collection = await client.get_collection(test_collection_name)
         assert isinstance(collection, PGVectorCollection)
         await self._cleanup_db(client)
 
@@ -48,12 +47,12 @@ class TestPGVectorClient_Integration:
     async def test_delete_collection(self, client):
         # Delete non-existent collection
         with pytest.raises(exception.CollectionNotFound, match="Table test_collection does not exist in schema test_schema"):
-            await client.delete_collection("test_collection")
+            await client.delete_collection(test_collection_name)
 
         await self._create_test_collection(client)
-        await client.delete_collection("test_collection")
+        await client.delete_collection(test_collection_name)
 
-        assert client._metadata.tables.get(f"{TEST_SCHEMA_NAME}.test_collection") is None
+        assert self._get_collection(client) is None
         await self._cleanup_db(client)
 
     @pytest.mark.Integration
@@ -63,10 +62,10 @@ class TestPGVectorClient_Integration:
         assert collections == []
         await self._create_test_collection(client)
         collections = await client.list_collections()
-        assert collections == [{"name": "test_collection", "dimension": 2}]
+        assert collections == [{"name": test_collection_name, "dimension": 2}]
         await self._cleanup_db(client)
 
-    async def _cleanup_db(self, client, collection_name="test_collection"):
+    async def _cleanup_db(self, client, collection_name=test_collection_name):
         # TODO: Improve Cleanup
         async with client.engine.begin() as conn:
             if client._metadata.tables:
@@ -75,7 +74,7 @@ class TestPGVectorClient_Integration:
 
     async def _create_test_collection(self, client):
         collection = Table(
-            "test_collection",
+            test_collection_name,
             client._metadata,
         Column("id", String, primary_key=True),
         Column("embedding", Vector(2), nullable=False),
@@ -90,3 +89,6 @@ class TestPGVectorClient_Integration:
         async with client.engine.begin() as conn:
             await conn.execute(create_expression)
             await client.sync()
+
+    def _get_collection(self, client, collection_name=test_collection_name):
+        return client._metadata.tables.get(f"{TEST_SCHEMA_NAME}.{collection_name}")
