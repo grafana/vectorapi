@@ -14,8 +14,13 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
+      target: development
     volumes:
-      - .:/app
+      - ./vectorapi:/app/vectorapi
+      - ./tests:/app/tests
+      - ./scripts:/app/scripts
+      - ./docs:/app/docs
+      - ./.sentence_transformers:/app/.sentence_transformers
     environment:
       POSTGRES_HOST: db
       POSTGRES_USER: postgres
