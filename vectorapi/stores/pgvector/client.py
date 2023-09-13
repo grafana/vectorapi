@@ -1,7 +1,6 @@
 from typing import Optional
 
 from loguru import logger
-from sqlalchemy.schema import CreateSchema
 
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
@@ -17,8 +16,6 @@ class PGVectorClient(Client):
         self._metadata = Base.metadata
 
     async def setup(self):
-        async with self.engine.begin() as conn:
-            await conn.execute(CreateSchema(VECTORDB_SCHEMA, if_not_exists=True))
         await self.sync()
 
     async def sync(self):

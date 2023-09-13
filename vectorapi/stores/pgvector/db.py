@@ -25,7 +25,9 @@ def init_db_engine():
 
         # create schema if it doesn't exist yet
         create_vectordb_schema = CreateSchema(VECTORDB_SCHEMA, if_not_exists=True)
-        dbapi_connection.run_async(lambda conn: conn.execute(create_vectordb_schema))
+        dbapi_connection.run_async(
+            lambda conn: conn.execute(create_vectordb_schema.compile().string)
+        )
 
     @event.listens_for(Table, "column_reflect")
     def _setup_vectortype(inspector: PGInspector, table: Table, column_info: Dict[str, Any]):
