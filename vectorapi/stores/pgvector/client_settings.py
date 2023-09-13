@@ -3,8 +3,6 @@ import os
 from pydantic import PostgresDsn, computed_field
 from pydantic_settings import BaseSettings
 
-SCHEMA_NAME = os.getenv("POSTGRES_SCHEMA_NAME", "vector")
-
 
 class Settings(BaseSettings):
     # PostgreSQL Database Connection

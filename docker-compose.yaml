@@ -22,7 +22,7 @@ services:
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_PORT: 5432
       POSTGRES_DB: postgres
-      POSTGRES_SCHEMA_NAME: vector
+      VECTORDB_SCHEMA: vector
       VECTORDB_CLIENT: pgvector
       PORT: 8889
     ports:

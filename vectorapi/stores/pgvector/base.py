@@ -1,6 +1,7 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
-from vectorapi.stores.pgvector.client_settings import SCHEMA_NAME
+
+from vectorapi.stores.pgvector.const import VECTORDB_SCHEMA
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -15,7 +16,7 @@ class Base(DeclarativeBase):
     __abstract__ = True
     # TODO: Remove ignore
     # https://github.com/sqlalchemy/sqlalchemy/issues/10264
-    metadata = MetaData(naming_convention=convention, schema=SCHEMA_NAME)  # type: ignore
+    metadata = MetaData(naming_convention=convention, schema=VECTORDB_SCHEMA)  # type: ignore
 
     def __repr__(self) -> str:
         columns = ", ".join(

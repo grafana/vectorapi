@@ -1,11 +1,13 @@
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from vectorapi.stores.pgvector.client_settings import settings, SCHEMA_NAME
-from sqlalchemy import event, AdaptedConnection
+from typing import Any, Dict
 
-from typing import Dict, Any
-from sqlalchemy import Table, text
 from pgvector.sqlalchemy import Vector
+from sqlalchemy import AdaptedConnection, Table, event, text
 from sqlalchemy.dialects.postgresql.base import PGInspector
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from vectorapi.stores.pgvector.client_settings import settings
+from vectorapi.stores.pgvector.const import VECTORDB_SCHEMA
+from sqlalchemy.schema import CreateSchema
 
 
 def init_db_engine():
@@ -17,8 +19,13 @@ def init_db_engine():
 
     @event.listens_for(async_engine.sync_engine, "connect")
     def register_vector(dbapi_connection: AdaptedConnection, *args):
-        stmt = "CREATE EXTENSION IF NOT EXISTS vector"
-        dbapi_connection.run_async(lambda conn: conn.execute(stmt))
+        # register vector extension
+        create_extension = "CREATE EXTENSION IF NOT EXISTS vector"
+        dbapi_connection.run_async(lambda conn: conn.execute(create_extension))
+
+        # create schema if it doesn't exist yet
+        create_vectordb_schema = CreateSchema(VECTORDB_SCHEMA, if_not_exists=True)
+        dbapi_connection.run_async(lambda conn: conn.execute(create_vectordb_schema))
 
     @event.listens_for(Table, "column_reflect")
     def _setup_vectortype(inspector: PGInspector, table: Table, column_info: Dict[str, Any]):
@@ -37,7 +44,7 @@ def init_db_engine():
                     NOT attisdropped
                     AND pg_attribute.attname = 'embedding'
                     AND rel.relkind = 'r'
-                    AND pg_namespace.nspname = '{SCHEMA_NAME}'
+                    AND pg_namespace.nspname = '{VECTORDB_SCHEMA}'
                     AND rel.relname = '{table.name}'
                 """
             with inspector.engine.begin() as conn:
