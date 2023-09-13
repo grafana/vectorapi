@@ -26,7 +26,7 @@ import uvicorn
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
-JAEGER_HOST = os.getenv("JAEGER_HOST")
+OTEL_EXPORTER_JAEGER_ENDPOINT = os.getenv("OTEL_EXPORTER_JAEGER_ENDPOINT")
 
 
 def initialize_tracing() -> None:
@@ -60,7 +60,7 @@ async def lifespan(app: fastapi.FastAPI):
 
 def create_app() -> fastapi.FastAPI:
     """create_app instantiates the FastAPI app."""
-    if JAEGER_HOST:
+    if OTEL_EXPORTER_JAEGER_ENDPOINT:
         initialize_tracing()
 
     app = fastapi.FastAPI(default_response_class=responses.ORJSONResponse, lifespan=lifespan)
