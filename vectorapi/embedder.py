@@ -31,6 +31,7 @@ class Embedder:
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
+        self.dimension: int = self.model.get_sentence_embedding_dimension()  # type: ignore
 
     @property
     def _trace_attributes(self):
@@ -39,6 +40,7 @@ class Embedder:
             "batch_size": self.batch_size,
             "device": self.device,
             "normalize_embeddings": self.normalize_embeddings,
+            "dimension": self.dimension,
         }
 
     @lru_cache(maxsize=128)
