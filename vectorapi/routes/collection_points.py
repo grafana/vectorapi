@@ -138,9 +138,9 @@ class SearchPointRequest(BaseModel):
 
 @router.post(
     "/{collection_name}/search",
-    name="search_points",
+    name="search",
 )
-async def search_points(
+async def search(
     collection_name: str,
     request: SearchPointRequest,
     client: StoreClient,
