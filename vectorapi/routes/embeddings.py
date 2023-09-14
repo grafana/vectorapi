@@ -1,5 +1,4 @@
 """models.py contains model configuration related apis."""
-from functools import lru_cache
 from typing import List
 
 import fastapi
@@ -8,17 +7,12 @@ from numpy.typing import NDArray
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from vectorapi.embedder import Embedder
+from vectorapi.embedder import get_embedder
 from vectorapi.responses import ORJSONResponse
 
 router = fastapi.APIRouter(
     tags=["embeddings"],
 )
-
-
-@lru_cache(maxsize=3)
-def get_embedder(model_name: str) -> Embedder:
-    return Embedder(model_name=model_name)
 
 
 class BaseModelCamel(BaseModel):

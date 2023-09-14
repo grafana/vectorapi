@@ -61,3 +61,8 @@ class Embedder:
             similarity = np.matmul(source_vector, vector.T)
             similarity_scores.append(similarity)
         return similarity_scores
+
+
+@lru_cache(maxsize=3)
+def get_embedder(model_name: str) -> Embedder:
+    return Embedder(model_name=model_name)
