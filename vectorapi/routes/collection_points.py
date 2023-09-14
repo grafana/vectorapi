@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from vectorapi.models.collection import CollectionPoint
 from vectorapi.stores.store_client import StoreClient
+from vectorapi.embedder import get_embedder
 
 router = fastapi.APIRouter(
     prefix="/collections",
@@ -121,6 +122,57 @@ async def query_points(
             )
         logger.debug(f"Searching {request.top_k} embeddings for query")
         points = await collection.query(request.query, request.top_k)
+    except Exception as e:
+        raise fastapi.HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+    return points
+
+
+class SearchPointRequest(BaseModel):
+    input: str
+    top_k: int = 10
+    model_name: str = "BAAI/bge-small-en"
+
+
+@router.post(
+    "/{collection_name}/search",
+    name="search_points",
+)
+async def search_points(
+    collection_name: str,
+    request: SearchPointRequest,
+    client: StoreClient,
+):
+    """Search collection with a given text input."""
+    try:
+        logger.debug(f"Getting collection {collection_name}")
+        collection = await client.get_collection(collection_name)
+        if collection is None:
+            raise fastapi.HTTPException(
+                status_code=404,
+                detail=f"Collection with name {collection_name} does not exist",
+            )
+
+        embedder = get_embedder(model_name=request.model_name)
+        if embedder.dimension != collection.dimension:
+            raise fastapi.HTTPException(
+                status_code=400,
+                detail=f"Embedder dimension {embedder.dimension} does not match collection "
+                + f"dimension {collection.dimension}",
+            )
+
+        try:
+            vector = embedder.encode(request.input)
+        except Exception as err:
+            raise fastapi.HTTPException(
+                status_code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error encoding text: {err}",
+            )
+
+        logger.debug(f"Searching {request.top_k} embeddings for query")
+        points = await collection.query(vector.tolist(), request.top_k)
     except Exception as e:
         raise fastapi.HTTPException(
             status_code=500,
