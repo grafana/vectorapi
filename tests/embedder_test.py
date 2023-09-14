@@ -22,7 +22,7 @@ class TestEmbedder:
 
     @pytest.mark.skip(reason="benchmark test")
     def test_encode__benchmark(self, benchmark: BenchmarkFixture):
-        embedder = Embedder(model_name="BAAI/bge-small-en")
+        embedder = Embedder(model_name="BAAI/bge-small-en-v1.5")
         # encode once to make sure we have cache
         embedder.encode("test")
         benchmark(embedder.encode, "Why is my Mimir query performance so slow?")

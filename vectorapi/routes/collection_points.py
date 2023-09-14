@@ -133,7 +133,7 @@ async def query_points(
 class SearchPointRequest(BaseModel):
     input: str
     top_k: int = 10
-    model_name: str = "BAAI/bge-small-en"
+    model_name: str = "BAAI/bge-small-en-v1.5"
 
 
 @router.post(

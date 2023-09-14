@@ -38,7 +38,7 @@ class EmbeddingResponse(BaseModelCamel):
 
 
 class EmbeddingRequest(BaseModelCamel):
-    model: str = "BAAI/bge-small-en"
+    model: str = "BAAI/bge-small-en-v1.5"
     input: str
     user: str | None = None
 
@@ -70,7 +70,7 @@ async def create_embeddings(request: EmbeddingRequest):
 
 
 class SimilarityRequest(BaseModelCamel):
-    model: str = "BAAI/bge-small-en"
+    model: str = "BAAI/bge-small-en-v1.5"
     source_sentence: str
     sentences: List[str]
 

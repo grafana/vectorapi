@@ -21,7 +21,7 @@ def get_torch_device() -> str:
 class Embedder:
     def __init__(
         self,
-        model_name: str = "BAAI/bge-small-en",
+        model_name: str = "BAAI/bge-small-en-v1.5",
         batch_size: int = 32,
         device: str = get_torch_device(),
         normalize_embeddings: bool = True,
