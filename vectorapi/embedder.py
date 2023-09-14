@@ -21,7 +21,7 @@ def get_torch_device() -> str:
 class Embedder:
     def __init__(
         self,
-        model_name: str = "BAAI/bge-small-en",
+        model_name: str = "BAAI/bge-small-en-v1.5",
         batch_size: int = 32,
         device: str = get_torch_device(),
         normalize_embeddings: bool = True,
@@ -31,6 +31,7 @@ class Embedder:
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
+        self.dimension: int = self.model.get_sentence_embedding_dimension()  # type: ignore
 
     @property
     def _trace_attributes(self):
@@ -39,6 +40,7 @@ class Embedder:
             "batch_size": self.batch_size,
             "device": self.device,
             "normalize_embeddings": self.normalize_embeddings,
+            "dimension": self.dimension,
         }
 
     @lru_cache(maxsize=128)
@@ -61,3 +63,8 @@ class Embedder:
             similarity = np.matmul(source_vector, vector.T)
             similarity_scores.append(similarity)
         return similarity_scores
+
+
+@lru_cache(maxsize=3)
+def get_embedder(model_name: str) -> Embedder:
+    return Embedder(model_name=model_name)
