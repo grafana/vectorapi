@@ -18,7 +18,7 @@ POST http://localhost:8889/v1/embeddings
 ```json
 {
   "input": "Why is Loki sloww2?",
-  "model": "BAAI/bge-small-en"
+  "model": "BAAI/bge-small-en-v1.5"
 }
 ```
 
