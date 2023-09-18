@@ -1,29 +1,9 @@
----
 version: "3.4"
 services:
   db:
-    image: ankane/pgvector
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: postgres
-  integration-tests:
+    ports: !reset []
+  api:
     command: ["pytest", "-m", "integration", "--integration"]
-    build:
-      dockerfile: Dockerfile
-      context: .
-      target: development
     environment:
-      POSTGRES_HOST: db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: postgres
       VECTORAPI_STORE_SCHEMA: test_schema
-      VECTORAPI_STORE_CLIENT: pgvector
-      PORT: 8889
-    depends_on:
-      - db
+    ports: !reset []
