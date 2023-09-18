@@ -15,6 +15,7 @@ from sqlalchemy.dialects import postgresql
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection"
 
+pytestmark = pytest.mark.asyncio
 
 class TestPGVectorClient:
     
@@ -25,7 +26,6 @@ class TestPGVectorClient:
         return pg_client
 
     @pytest.mark.Integration
-    @pytest.mark.asyncio
     async def test_create_collection(self, client):
         await client.create_collection(test_collection_name, 3)
 
@@ -33,7 +33,6 @@ class TestPGVectorClient:
         await self._cleanup_db(client)
 
     @pytest.mark.Integration
-    @pytest.mark.asyncio
     async def test_get_collection(self, client):
         with pytest.raises(exception.CollectionNotFound, match="Table test_collection does not exist in schema test_schema"):
             await client.get_collection(test_collection_name)
@@ -43,7 +42,6 @@ class TestPGVectorClient:
         await self._cleanup_db(client)
 
     @pytest.mark.Integration
-    @pytest.mark.asyncio
     async def test_delete_collection(self, client):
         # Delete non-existent collection
         with pytest.raises(exception.CollectionNotFound, match="Table test_collection does not exist in schema test_schema"):
@@ -56,7 +54,6 @@ class TestPGVectorClient:
         await self._cleanup_db(client)
 
     @pytest.mark.Integration
-    @pytest.mark.asyncio
     async def test_list_collections(self, client):
         collections = await client.list_collections()
         assert collections == []
