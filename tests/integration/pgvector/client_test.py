@@ -25,14 +25,14 @@ class TestPGVectorClient:
         await pg_client.setup()
         return pg_client
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_create_collection(self, client):
         await client.create_collection(test_collection_name, 3)
 
         assert self._get_collection(client) is not None
         await self._cleanup_db(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_get_collection(self, client):
         with pytest.raises(exception.CollectionNotFound, match="Table test_collection does not exist in schema test_schema"):
             await client.get_collection(test_collection_name)
@@ -41,7 +41,7 @@ class TestPGVectorClient:
         assert isinstance(collection, PGVectorCollection)
         await self._cleanup_db(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_delete_collection(self, client):
         # Delete non-existent collection
         with pytest.raises(exception.CollectionNotFound, match="Table test_collection does not exist in schema test_schema"):
@@ -53,7 +53,7 @@ class TestPGVectorClient:
         assert self._get_collection(client) is None
         await self._cleanup_db(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_list_collections(self, client):
         collections = await client.list_collections()
         assert collections == []
