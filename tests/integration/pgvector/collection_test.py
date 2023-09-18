@@ -11,6 +11,8 @@ from vectorapi.stores.pgvector.exceptions import CollectionPointNotFound
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestPGVectorCollection:
 
@@ -20,7 +22,6 @@ class TestPGVectorCollection:
         await pg_client.setup()
         return pg_client
 
-    @pytest.mark.asyncio
     @pytest.mark.Integration
     async def test_insert_point(self, client):
         ## Create collection
@@ -35,7 +36,6 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.asyncio
     @pytest.mark.Integration
     async def test_get_point(self, client):
         ## Create collection
@@ -56,7 +56,6 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.asyncio
     @pytest.mark.Integration
     async def test_update_point(self, client):
         ## Create collection
@@ -76,7 +75,6 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.asyncio
     @pytest.mark.Integration
     async def test_delete_point(self, client):
         ## Create collection
@@ -93,7 +91,6 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.asyncio
     @pytest.mark.Integration
     async def test_query_point(self, client):
         # Create collection
@@ -127,7 +124,6 @@ class TestPGVectorCollection:
         # Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.asyncio
     @pytest.mark.Integration
     async def test_upsert_point(self, client):
         # Create collection
