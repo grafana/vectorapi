@@ -28,6 +28,6 @@ docs: env
 .PHONY: docs
 
 integration: 
-	docker compose -f docker-compose.tests.yaml up --build --abort-on-container-exit
+	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml up --build --abort-on-container-exit
 	docker compose -f docker-compose.tests.yaml down
 .PHONY: integration
