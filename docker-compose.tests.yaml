@@ -11,9 +11,11 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_DB: postgres
   integration-tests:
+    command: ["pytest", "-m", "integration", "--integration"]
     build:
-      dockerfile: tests.Dockerfile
+      dockerfile: Dockerfile
       context: .
+      target: development
     environment:
       POSTGRES_HOST: db
       POSTGRES_USER: postgres
