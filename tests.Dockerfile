@@ -38,4 +38,4 @@ WORKDIR /app
 COPY --link . .
 
 ENV MODULE_NAME="vectorapi.main"
-CMD ["pytest", "-m", "Integration"]
+CMD ["pytest", "-m", "integration", "--integration"]

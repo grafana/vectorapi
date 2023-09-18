@@ -22,7 +22,7 @@ class TestPGVectorCollection:
         await pg_client.setup()
         return pg_client
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_insert_point(self, client):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -36,7 +36,7 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_get_point(self, client):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -56,7 +56,7 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_update_point(self, client):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -75,7 +75,7 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_delete_point(self, client):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -91,7 +91,7 @@ class TestPGVectorCollection:
         ## Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_query_point(self, client):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -124,7 +124,7 @@ class TestPGVectorCollection:
         # Cleanup
         await self._cleanup_collection(client)
 
-    @pytest.mark.Integration
+    @pytest.mark.integration
     async def test_upsert_point(self, client):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
