@@ -31,3 +31,7 @@ integration:
 	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml up --build --abort-on-container-exit
 	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml down
 .PHONY: integration
+
+unit_tests:
+	poetry run pytest -v
+.PHONY: unit_tests
