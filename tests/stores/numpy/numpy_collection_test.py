@@ -3,9 +3,10 @@ import pytest
 from vectorapi.stores.numpy.client import NumpyClient
 from vectorapi.models.collection import CollectionPoint
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestNumpyCollection:
-    @pytest.mark.asyncio
     async def test_insert(self):
         client = NumpyClient()
         collection = await client.create_collection("test_collection", 2)
@@ -16,7 +17,6 @@ class TestNumpyCollection:
         assert point.embedding == [1.0, 2.0]
         assert point.metadata == {}
 
-    @pytest.mark.asyncio
     async def test_update(self):
         client = NumpyClient()
         collection = await client.create_collection("test_collection", 2)
@@ -27,7 +27,6 @@ class TestNumpyCollection:
         assert point.embedding == [2.0, 3.0]
         assert point.metadata == {}
 
-    @pytest.mark.asyncio
     async def test_delete(self):
         client = NumpyClient()
         collection = await client.create_collection("test_collection", 2)
@@ -37,7 +36,6 @@ class TestNumpyCollection:
         with pytest.raises(ValueError):
             assert await collection.get("1")
 
-    @pytest.mark.asyncio
     async def test_query(self):
         client = NumpyClient()
         collection = await client.create_collection("test_collection", 2)
@@ -49,7 +47,6 @@ class TestNumpyCollection:
         results = await collection.query([2.0, 4.0], limit=3)
         assert len(results) == 3
 
-    @pytest.mark.asyncio
     async def test_upsert(self):
         client = NumpyClient()
         collection = await client.create_collection("test_collection", 2)
