@@ -62,6 +62,15 @@ class TestPGVectorClient:
         assert collections == [{"name": test_collection_name, "dimension": 2}]
         await self._cleanup_db(client)
 
+    @pytest.mark.integration
+    async def test_get_or_create_collection(self, client):
+        collection = await client.get_or_create_collection(test_collection_name, 2)
+        assert isinstance(collection, PGVectorCollection)
+
+        assert self._get_collection(client) is not None
+
+        await self._cleanup_db(client)
+
     async def _cleanup_db(self, client, collection_name=test_collection_name):
         # TODO: Improve Cleanup
         async with client.engine.begin() as conn:
