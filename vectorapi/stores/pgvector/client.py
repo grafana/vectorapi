@@ -23,6 +23,15 @@ class PGVectorClient(Client):
         async with self.engine.begin() as conn:
             await conn.run_sync(self._metadata.reflect)
 
+    async def get_or_create_collection(self, name: str, dimension: int) -> Collection:
+        try:
+            collection = await self.get_collection(name)
+            return collection
+        except CollectionNotFound:
+            return await self.create_collection(name, dimension)
+        except Exception as e:
+            raise e
+
     async def create_collection(self, name: str, dimension: int) -> Collection:
         logger.info(f"Creating collection name={name} dimension={dimension}")
         collection = PGVectorCollection(
