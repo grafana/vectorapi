@@ -37,7 +37,7 @@ class PGVectorClient(Client):
             raise e
         return collection
 
-    async def get_collection(self, name: str) -> Optional[Collection]:
+    async def get_collection(self, name: str) -> Collection:
         logger.info(f"Getting collection name={name}")
         try:
             if self._collection_exists(name):
