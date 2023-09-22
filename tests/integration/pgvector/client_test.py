@@ -2,7 +2,7 @@ import os
 from vectorapi.models.client import Client
 from vectorapi.stores.pgvector.client import PGVectorClient
 from vectorapi.stores.pgvector.collection import PGVectorCollection
-import vectorapi.stores.pgvector.exceptions as exception
+import vectorapi.stores.exceptions as exception
 
 import pytest
 import pytest_asyncio

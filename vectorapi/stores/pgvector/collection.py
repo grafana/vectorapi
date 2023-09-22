@@ -11,7 +11,7 @@ from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import Mapped, mapped_column, declared_attr
 from vectorapi.models.collection import Collection
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.stores.pgvector.exceptions import CollectionPointNotFound
+from vectorapi.stores.exceptions import CollectionPointNotFound
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from vectorapi.stores.pgvector.base import Base
 

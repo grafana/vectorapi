@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from vectorapi.stores.pgvector.client import PGVectorClient
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.stores.pgvector.exceptions import CollectionPointNotFound
+from vectorapi.stores.exceptions import CollectionPointNotFound
 
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
