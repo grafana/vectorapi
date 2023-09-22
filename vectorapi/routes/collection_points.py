@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any, Optional
 
 from fastapi import APIRouter, HTTPException, Response, status
 from loguru import logger
@@ -89,6 +89,7 @@ async def get_point(
 class QueryPointRequest(BaseModel):
     query: List[float]
     top_k: int = 10
+    filters: Optional[Dict[str, Any]] = None
 
 
 @router.post(

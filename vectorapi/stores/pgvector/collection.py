@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Dict, List, Type
+from typing import Any, AsyncIterator, Dict, List, Type, Optional
 
 from pgvector.sqlalchemy import Vector
 from pydantic import ConfigDict, Field
-from sqlalchemy import String, delete, select, text
+from sqlalchemy import String, delete, select, text, and_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
@@ -120,7 +120,7 @@ class PGVectorCollection(Collection):
         async with self.session_maker() as session:
             await self.table.delete(session=session, id=id)
 
-    async def query(self, query: List[float], limit: int = 10) -> List[CollectionPointResult]:
+    async def query(self, query: List[float], limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> List[CollectionPointResult]:
         if self.table is None:
             return []
 
@@ -129,6 +129,9 @@ class PGVectorCollection(Collection):
         stmt = stmt.column(
             (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
         )
+        if filters is not None:
+            conditions = [self.table.metadatas[key].astext == str(value) for key, value in filters.items()]
+            stmt = stmt.where(and_(*conditions))
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
