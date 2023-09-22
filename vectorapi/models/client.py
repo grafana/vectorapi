@@ -14,10 +14,10 @@ class Client(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def get_collection(self, name: str) -> Optional[Collection]:
+    async def get_collection(self, name: str) -> Collection:
         raise NotImplementedError()
 
-    async def get_or_create_collection(self, name: str, dimension: int) -> Union[Collection, None]:
+    async def get_or_create_collection(self, name: str, dimension: int) -> Collection:
         try:
             collection = await self.get_collection(name)
             return collection
