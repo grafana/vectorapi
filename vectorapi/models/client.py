@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from vectorapi.models.collection import Collection
 from vectorapi.stores.exceptions import CollectionNotFound
@@ -17,7 +17,7 @@ class Client(ABC):
     async def get_collection(self, name: str) -> Optional[Collection]:
         raise NotImplementedError()
 
-    async def get_or_create_collection(self, name: str, dimension: int) -> Collection:
+    async def get_or_create_collection(self, name: str, dimension: int) -> Union[Collection, None]:
         try:
             collection = await self.get_collection(name)
             return collection
