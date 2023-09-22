@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from vectorapi.models.collection import Collection
+from vectorapi.stores.exceptions import CollectionNotFound
 
 
 class Client(ABC):
@@ -17,10 +18,13 @@ class Client(ABC):
         raise NotImplementedError()
 
     async def get_or_create_collection(self, name: str, dimension: int) -> Collection:
-        collection = await self.get_collection(name)
-        if collection is None:
+        try:
+            collection = await self.get_collection(name)
+            return collection
+        except CollectionNotFound:
             return await self.create_collection(name, dimension)
-        return collection
+        except Exception as e:
+            raise e
 
     @abstractmethod
     async def delete_collection(self, name: str):

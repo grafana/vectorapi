@@ -8,7 +8,7 @@ from vectorapi.stores.pgvector.base import Base
 from vectorapi.stores.pgvector.collection import PGVectorCollection
 from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.stores.pgvector.db import init_db_engine
-from vectorapi.stores.pgvector.exceptions import CollectionNotFound
+from vectorapi.stores.exceptions import CollectionNotFound
 
 
 class PGVectorClient(Client):
@@ -22,15 +22,6 @@ class PGVectorClient(Client):
     async def sync(self):
         async with self.engine.begin() as conn:
             await conn.run_sync(self._metadata.reflect)
-
-    async def get_or_create_collection(self, name: str, dimension: int) -> Collection:
-        try:
-            collection = await self.get_collection(name)
-            return collection
-        except CollectionNotFound:
-            return await self.create_collection(name, dimension)
-        except Exception as e:
-            raise e
 
     async def create_collection(self, name: str, dimension: int) -> Collection:
         logger.info(f"Creating collection name={name} dimension={dimension}")
