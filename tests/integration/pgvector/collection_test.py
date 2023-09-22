@@ -2,6 +2,7 @@ import os
 
 import pytest
 import pytest_asyncio
+import json
 from sqlalchemy import text
 
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
@@ -127,6 +128,42 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
+    async def test_query_point_with_filters(self, client):
+        # Create collection
+        collection = await client.create_collection(test_collection_name, 2)
+
+        # Insert points
+        await self._insert_point(client, "1", [1.0, 2.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "2", [1.0, 2.0], {"metadata_filter": "filter2"})
+
+        await self._insert_point(client, "3", [3.0, 4.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "4", [3.0, 4.0], {"metadata_filter": "filter2"})
+
+        await self._insert_point(client, "5", [5.0, 6.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "6", [5.0, 6.0], {"metadata_filter": "filter2"})
+
+        # Query points
+        results = await collection.query([1.0, 2.0], limit=2, filters={"metadata_filter": "filter1"})
+        assert len(results) == 2
+
+        assert isinstance(results[0], CollectionPointResult)
+        payload_1 = results[0].payload
+        assert isinstance(payload_1, CollectionPoint)
+        assert payload_1.id == "1"
+        assert payload_1.embedding == [1.0, 2.0]
+        assert payload_1.metadata == {"metadata_filter": "filter1"}
+
+        assert isinstance(results[1], CollectionPointResult)
+        payload_2 = results[1].payload
+        assert isinstance(payload_2, CollectionPoint)
+        assert payload_2.id == "3"
+        assert payload_2.embedding == [3.0, 4.0]
+        assert payload_2.metadata == {"metadata_filter": "filter1"}
+
+        # Cleanup
+        await self._cleanup_collection(client)
+
+    @pytest.mark.integration
     async def test_upsert_point(self, client):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -154,7 +191,7 @@ class TestPGVectorCollection:
             return [row for row in result.all()]
 
     async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
-        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{metadata}')"
+        stmt = f'''INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')'''
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))
 
