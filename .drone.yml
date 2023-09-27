@@ -85,10 +85,16 @@ steps:
       "counter=0; until [ $counter -gt 30 ] || [ $(docker ps > /dev/null 2>&1; echo $?) -eq 0 ]; do sleep 1; let counter+=1;  echo \"($counter) waiting for docker to start..\"; done",
       "mkdir -p ~/.docker",
       "echo $dockerconfigjson > ~/.docker/config.json",
+      # push commit tag manifest
       'docker manifest create us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10} 
       us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}-linux-amd64 
       us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}-linux-arm64',
       'docker manifest push us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}',
+      # push latest tag manifest
+      'docker manifest create us.gcr.io/kubernetes-dev/vectorapi:latest
+      us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}-linux-amd64 
+      us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}-linux-arm64',
+      'docker manifest push us.gcr.io/kubernetes-dev/vectorapi:latest',
       ]
     environment:
       COMPOSE_DOCKER_CLI_BUILD: 1
