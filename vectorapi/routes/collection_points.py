@@ -6,8 +6,8 @@ from pydantic import BaseModel
 
 from vectorapi.embedder import get_embedder
 from vectorapi.models.collection import CollectionPoint
-from vectorapi.stores.store_client import StoreClient
 from vectorapi.routes.collections import get_collection
+from vectorapi.stores.store_client import StoreClient
 
 router = APIRouter(
     prefix="/collections",

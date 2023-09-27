@@ -1,10 +1,9 @@
 from fastapi import APIRouter, HTTPException, Response, status
-
 from loguru import logger
 from pydantic import BaseModel
 
-from vectorapi.stores.store_client import StoreClient
 from vectorapi.stores.exceptions import CollectionNotFound
+from vectorapi.stores.store_client import StoreClient
 
 router = APIRouter(
     prefix="/collections",

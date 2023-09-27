@@ -4,6 +4,7 @@ from vectorapi.stores.numpy.client import NumpyClient
 
 pytestmark = pytest.mark.asyncio
 
+
 class TestNumpyClient:
     async def test_create_collection(self):
         client = NumpyClient()
