@@ -206,6 +206,40 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
+    @pytest.mark.parametrize(
+        "filters, expected_count, expected_metadata",
+        [
+            (
+                {"$or": [{"metadata_filter_1": {"$eq": "filter1"}}, {"metadata_filter_1": {"$eq": "filter2"}}]},
+                2,
+                [{"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"}, {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"}],
+            ),
+            (
+                {"$and": [{"metadata_filter_1": {"$eq": "filter1"}}, {"metadata_filter_2": {"$eq": "filter1"}}]},
+                1,
+                [{"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"}],
+            ),
+        ],
+    )
+    async def test_query_point_logical_operators_filters(self, client, filters, expected_count, expected_metadata):
+        # Create collection
+        collection = await client.create_collection(test_collection_name, 2)
+
+        # Insert points
+        await self._insert_point(client, "1", [1.0, 2.0], {"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"})
+        await self._insert_point(client, "2", [1.0, 2.0], {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"})
+        await self._insert_point(client, "3", [1.0, 2.0], {"metadata_filter_1": "filter3", "metadata_filter_2": "filter3"})
+
+        results = await collection.query([1.0, 2.0], limit=3, filters=filters)
+
+        assert len(results) == expected_count
+        for i, result in enumerate(results):
+            assert result.payload.metadata == expected_metadata[i]
+
+        # Cleanup
+        await self._cleanup_collection(client)
+
+    @pytest.mark.integration
     async def test_upsert_point(self, client):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)

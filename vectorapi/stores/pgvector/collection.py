@@ -4,7 +4,7 @@ from typing import Any, AsyncIterator, Dict, List, Type, Optional
 
 from pgvector.sqlalchemy import Vector
 from pydantic import ConfigDict, Field
-from sqlalchemy import String, Column, cast, delete, select, text, and_
+from sqlalchemy import String, Column, cast, delete, select, text, and_, or_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
@@ -180,7 +180,16 @@ class PGVectorCollection(Collection):
                 raise e
 
     def _build_filters(self, col: Column, filters: Dict[str, Any]):
+        ##TODO: Check data types and edge cases
         key, value = filters.popitem()
+
+        if key in ["$and", "$or"]:
+            if key == "$and":
+                return and_(*[self._build_filters(col, filter) for filter in value])
+
+            if key == "$or":
+                return or_(*[self._build_filters(col, filter) for filter in value])
+
         operator, filter_value = value.popitem()
 
         if not isinstance(filter_value, str):
