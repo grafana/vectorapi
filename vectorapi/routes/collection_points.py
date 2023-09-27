@@ -106,7 +106,7 @@ async def query_points(
 
     logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
-        points = await collection.query(request.query, request.top_k)
+        points = await collection.query(request.query, request.top_k, request.filters)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(

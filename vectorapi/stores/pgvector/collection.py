@@ -4,7 +4,7 @@ from typing import Any, AsyncIterator, Dict, List, Type, Optional
 
 from pgvector.sqlalchemy import Vector
 from pydantic import ConfigDict, Field
-from sqlalchemy import String, delete, select, text, and_
+from sqlalchemy import String, Column, cast, delete, select, text, and_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
@@ -15,7 +15,7 @@ from vectorapi.models.collection import (
     CollectionPoint,
     CollectionPointResult,
 )
-from vectorapi.stores.exceptions import CollectionPointNotFound
+from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.stores.pgvector.base import Base
 
 
@@ -130,8 +130,8 @@ class PGVectorCollection(Collection):
             (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
         )
         if filters is not None:
-            conditions = [self.table.metadatas[key].astext == str(value) for key, value in filters.items()]
-            stmt = stmt.where(and_(*conditions))
+            conditions = self._build_filters(self.table.metadatas, filters)
+            stmt = stmt.filter(conditions)
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
@@ -179,6 +179,23 @@ class PGVectorCollection(Collection):
             else:
                 raise e
 
+    def _build_filters(self, col: Column, filters: Dict[str, Any]):
+        key, value = filters.popitem()
+        operator, filter_value = value.popitem()
+
+        if not isinstance(filter_value, str):
+            raise CollectionPointFilterError("Filter value must be a string")
+
+        value = cast(filter_value, postgresql.JSONB)
+        operation = col.op("->")(key)
+
+        if "$eq" == operator:
+            return operation == value
+
+        if "$ne" == operator:
+            return operation != value
+
+        raise CollectionPointFilterError(f"Unsupported operator {operator}")
 
 def is_duplicate_key_error(error_message):
     return "duplicate key value violates unique constraint" in error_message

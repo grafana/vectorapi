@@ -6,7 +6,7 @@ import json
 from sqlalchemy import text
 
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.stores.exceptions import CollectionPointNotFound
+from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.stores.pgvector.client import PGVectorClient
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
@@ -142,8 +142,10 @@ class TestPGVectorCollection:
         await self._insert_point(client, "5", [5.0, 6.0], {"metadata_filter": "filter1"})
         await self._insert_point(client, "6", [5.0, 6.0], {"metadata_filter": "filter2"})
 
-        # Query points
-        results = await collection.query([1.0, 2.0], limit=2, filters={"metadata_filter": "filter1"})
+        # Query points with eq filter
+        results = await collection.query(
+            [1.0, 2.0], limit=2, filters={"metadata_filter": {"$eq": "filter1"}}
+        )
         assert len(results) == 2
 
         assert isinstance(results[0], CollectionPointResult)
@@ -159,6 +161,46 @@ class TestPGVectorCollection:
         assert payload_2.id == "3"
         assert payload_2.embedding == [3.0, 4.0]
         assert payload_2.metadata == {"metadata_filter": "filter1"}
+
+        results = await collection.query(
+            [1.0, 2.0], limit=2, filters={"metadata_filter": {"$ne": "filter1"}}
+        )
+        assert len(results) == 2
+
+        payload_1 = results[0].payload
+        assert payload_1.metadata == {"metadata_filter": "filter2"}
+
+        payload_2 = results[0].payload
+        assert payload_2.metadata == {"metadata_filter": "filter2"}
+
+        await self._cleanup_collection(client)
+
+    @pytest.mark.integration
+    async def test_query_point_with_filter_exceptions(self, client):
+        # Create collection
+        collection = await client.create_collection(test_collection_name, 2)
+
+        # Insert points
+        await self._insert_point(client, "1", [1.0, 2.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "2", [1.0, 2.0], {"metadata_filter": "filter2"})
+
+        ## Assert raised exception with unsupported filter
+        with pytest.raises(
+            CollectionPointFilterError,
+        ) as excinfo:
+            await collection.query(
+                [1.0, 2.0], limit=2, filters={"metadata_filter": {"$ee": "filter1"}}
+            )
+        assert "Unsupported operator $ee" in str(excinfo.value)
+
+        ## Assert raised exception with target filter value not string
+        with pytest.raises(
+            CollectionPointFilterError,
+            match=f"Filter value must be a string",
+        ):
+            await collection.query(
+                [1.0, 2.0], limit=2, filters={"metadata_filter": {"$eq": ["filter1"]}}
+            )
 
         # Cleanup
         await self._cleanup_collection(client)
