@@ -84,8 +84,7 @@ steps:
       platforms:
         - linux/amd64
         - linux/arm64
-      config:
-        from_secret: gcr_admin
+      from_secret: gcr_admin
       tags:
         - latest
 
