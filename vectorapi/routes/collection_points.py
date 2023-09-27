@@ -1,14 +1,15 @@
 from typing import List
 
-import fastapi
+from fastapi import APIRouter, HTTPException, Response, status
 from loguru import logger
 from pydantic import BaseModel
 
+from vectorapi.embedder import get_embedder
 from vectorapi.models.collection import CollectionPoint
 from vectorapi.stores.store_client import StoreClient
-from vectorapi.embedder import get_embedder
+from vectorapi.routes.collections import get_collection
 
-router = fastapi.APIRouter(
+router = APIRouter(
     prefix="/collections",
     tags=["points"],
 )
@@ -24,20 +25,16 @@ async def upsert_point(
     client: StoreClient,
 ):
     """Create a new collection with the given name and dimension."""
+    collection = await get_collection(collection_name, client)
+
+    logger.debug(f"Upserting point {request.id}")
     try:
-        logger.debug(f"Getting collection {collection_name}")
-        collection = await client.get_collection(collection_name)
-        if collection is None:
-            raise fastapi.HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
-        logger.debug(f"Upserting point {request.id}")
         await collection.upsert(request.id, request.embedding, request.metadata)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error upserting point: {e}",
         )
     return request
 
@@ -52,22 +49,18 @@ async def delete_point(
     client: StoreClient,
 ):
     """Delete a collection point with the given id."""
+    collection = await get_collection(collection_name, client)
+
+    logger.debug(f"Deleting point {point_id}")
     try:
-        logger.debug(f"Getting collection {collection_name}")
-        collection = await client.get_collection(collection_name)
-        if collection is None:
-            raise fastapi.HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
-        logger.debug(f"Deleting point {point_id}")
         await collection.delete(point_id)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting point: {e}",
         )
-    return fastapi.Response(status_code=204)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(
@@ -80,20 +73,16 @@ async def get_point(
     client: StoreClient,
 ):
     """Get the collection point matching the given id."""
+    collection = await get_collection(collection_name, client)
+
+    logger.debug(f"Getting collection point {point_id}")
     try:
-        logger.debug(f"Getting collection {collection_name}")
-        collection = await client.get_collection(collection_name)
-        if collection is None:
-            raise fastapi.HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
-        logger.debug(f"Getting point {point_id}")
         return await collection.get(point_id)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting collection point {e}",
         )
 
 
@@ -112,20 +101,16 @@ async def query_points(
     client: StoreClient,
 ):
     """Query collection with a given embedding query."""
+    collection = await get_collection(collection_name, client)
+
+    logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
-        logger.debug(f"Getting collection {collection_name}")
-        collection = await client.get_collection(collection_name)
-        if collection is None:
-            raise fastapi.HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
-        logger.debug(f"Searching {request.top_k} embeddings for query")
         points = await collection.query(request.query, request.top_k)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error searching embeddings: {e}",
         )
     return points
 
@@ -146,36 +131,40 @@ async def search(
     client: StoreClient,
 ):
     """Search collection with a given text input."""
+    collection = await get_collection(collection_name, client)
+
     try:
-        logger.debug(f"Getting collection {collection_name}")
-        collection = await client.get_collection(collection_name)
-        if collection is None:
-            raise fastapi.HTTPException(
-                status_code=404,
-                detail=f"Collection with name {collection_name} does not exist",
-            )
-
         embedder = get_embedder(model_name=request.model_name)
-        if embedder.dimension != collection.dimension:
-            raise fastapi.HTTPException(
-                status_code=400,
-                detail=f"Embedder dimension {embedder.dimension} does not match collection "
-                + f"dimension {collection.dimension}",
-            )
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting embedder: {e}",
+        )
 
-        try:
-            vector = embedder.encode(request.input)
-        except Exception as err:
-            raise fastapi.HTTPException(
-                status_code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error encoding text: {err}",
-            )
+    if embedder.dimension != collection.dimension:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Embedder dimension {embedder.dimension} does not match collection "
+            + f"dimension {collection.dimension}",
+        )
 
-        logger.debug(f"Searching {request.top_k} embeddings for query")
+    try:
+        vector = embedder.encode(request.input)
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error encoding text: {e}",
+        )
+
+    logger.debug(f"Searching {request.top_k} embeddings for query")
+    try:
         points = await collection.query(vector.tolist(), request.top_k)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error searching embeddings: {e}",
         )
     return points

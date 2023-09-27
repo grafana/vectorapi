@@ -1,8 +1,9 @@
 """models.py contains model configuration related apis."""
 from typing import List
 
-import fastapi
 import numpy as np
+from fastapi import APIRouter, HTTPException, status
+from loguru import logger
 from numpy.typing import NDArray
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
@@ -10,7 +11,7 @@ from pydantic.alias_generators import to_camel
 from vectorapi.embedder import get_embedder
 from vectorapi.responses import ORJSONResponse
 
-router = fastapi.APIRouter(
+router = APIRouter(
     tags=["embeddings"],
 )
 
@@ -56,10 +57,10 @@ async def create_embeddings(request: EmbeddingRequest):
     embedder = get_embedder(model_name=request.model)
     try:
         vector: NDArray[np.float_] = embedder.encode(request.input)
-    except Exception as err:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error encoding text: {err}",
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error encoding text: {e}",
         )
     data = [EmbeddingResponseData(index=0, embedding=vector.tolist())]
     return EmbeddingResponse(
@@ -89,10 +90,11 @@ async def similarity(request: SimilarityRequest):
 
     try:
         similarity_scores = embedder.generate_similarity(request.source_sentence, request.sentences)
-    except Exception as err:
-        raise fastapi.HTTPException(
-            status_code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error encoding text: {err}",
+    except Exception as e:
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error calculating similarity: {e}",
         )
 
     return similarity_scores
