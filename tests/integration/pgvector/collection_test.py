@@ -1,12 +1,12 @@
 import os
+
 import pytest
 import pytest_asyncio
 from sqlalchemy import text
 
-from vectorapi.stores.pgvector.client import PGVectorClient
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
 from vectorapi.stores.exceptions import CollectionPointNotFound
-
+from vectorapi.stores.pgvector.client import PGVectorClient
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
@@ -15,7 +15,6 @@ pytestmark = pytest.mark.asyncio
 
 
 class TestPGVectorCollection:
-
     @pytest_asyncio.fixture()
     async def client(self):
         pg_client = PGVectorClient()
@@ -26,7 +25,7 @@ class TestPGVectorCollection:
     async def test_insert_point(self, client):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
-        
+
         ## Add point into collection
         await collection.insert("1", [1.0, 2.0], {})
 
@@ -42,7 +41,10 @@ class TestPGVectorCollection:
         collection = await client.create_collection(test_collection_name, 2)
 
         ## Get point from empty collection
-        with pytest.raises(CollectionPointNotFound, match=f"Collection point with id 1 not found in collection {test_collection_name}"):
+        with pytest.raises(
+            CollectionPointNotFound,
+            match=f"Collection point with id 1 not found in collection {test_collection_name}",
+        ):
             await collection.get("1")
 
         ## Add point into collection
@@ -69,7 +71,7 @@ class TestPGVectorCollection:
         point = await self._read_point(client, "1")
         assert len(point) == 1
         assert point[0][0] == "1"
-        assert point[0][1] == '[2,3]'
+        assert point[0][1] == "[2,3]"
         assert point[0][2] == {"metadata_test": "test"}
 
         ## Cleanup
@@ -133,13 +135,13 @@ class TestPGVectorCollection:
         await collection.upsert("1", [1.0, 2.0], {})
         points = await self._read_point(client, "1")
         assert len(points) == 1
-        assert points[0][1] == '[1,2]'
+        assert points[0][1] == "[1,2]"
 
         # Upsert point
         await collection.upsert("1", [2.0, 3.0], {"metadata_test": "test"})
         points = await self._read_point(client, "1")
         assert len(points) == 1
-        assert points[0][1] == '[2,3]'
+        assert points[0][1] == "[2,3]"
         assert points[0][2] == {"metadata_test": "test"}
 
         # Cleanup
@@ -150,12 +152,12 @@ class TestPGVectorCollection:
         async with client.engine.begin() as conn:
             result = await conn.execute(text(stmt))
             return [row for row in result.all()]
-        
+
     async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
         stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{metadata}')"
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))
-        
+
     async def _cleanup_collection(self, client, collection_name=test_collection_name):
         # TODO: Improve Cleanup
         drop_stmt = f"DROP TABLE IF EXISTS {TEST_SCHEMA_NAME}.{collection_name}"

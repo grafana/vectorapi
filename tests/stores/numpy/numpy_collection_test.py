@@ -1,7 +1,7 @@
 import pytest
 
-from vectorapi.stores.numpy.client import NumpyClient
 from vectorapi.models.collection import CollectionPoint
+from vectorapi.stores.numpy.client import NumpyClient
 
 pytestmark = pytest.mark.asyncio
 
@@ -42,8 +42,8 @@ class TestNumpyCollection:
         await collection.insert("1", [1.0, 2.0], {})
         await collection.insert("2", [2.0, 4.0], {})
         await collection.insert("3", [3.0, 5.0], {})
-        
-        #TODO: cosine similarity seems weird here. We need to spend some time to understand this.
+
+        # TODO: cosine similarity seems weird here. We need to spend some time to understand this.
         results = await collection.query([2.0, 4.0], limit=3)
         assert len(results) == 3
 

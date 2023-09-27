@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 import fastapi
 import loguru
+import uvicorn
 import uvloop
 from fastapi_route_logger_middleware import RouteLoggerMiddleware
 from opentelemetry import trace
@@ -22,7 +23,6 @@ from vectorapi.routes.collection_points import router as collection_points_route
 from vectorapi.routes.collections import router as collections_router
 from vectorapi.routes.embeddings import router as embeddings_routers
 from vectorapi.stores.store_client import client
-import uvicorn
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"

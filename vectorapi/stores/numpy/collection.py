@@ -6,7 +6,11 @@ from loguru import logger
 from numpy.typing import NDArray
 from pydantic import BeforeValidator, ConfigDict, PlainSerializer
 
-from vectorapi.models.collection import Collection, CollectionPoint, CollectionPointResult
+from vectorapi.models.collection import (
+    Collection,
+    CollectionPoint,
+    CollectionPointResult,
+)
 
 
 def nd_array_custom_serializer(x):

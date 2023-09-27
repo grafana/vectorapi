@@ -1,9 +1,11 @@
-import fastapi
+from fastapi import APIRouter, HTTPException, Response, status
+from loguru import logger
 from pydantic import BaseModel
 
+from vectorapi.stores.exceptions import CollectionNotFound
 from vectorapi.stores.store_client import StoreClient
 
-router = fastapi.APIRouter(
+router = APIRouter(
     prefix="/collections",
     tags=["collections"],
 )
@@ -32,9 +34,10 @@ async def create_collection(
         else:
             collection = await client.create_collection(request.collection_name, request.dimension)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        logger.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating collection: {e}",
         )
     return collection
 
@@ -55,11 +58,11 @@ async def delete_collection(
     try:
         await client.delete_collection(request.collection_name)
     except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting collection {request.collection_name}: {e}",
         )
-    return fastapi.Response(status_code=204)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(
@@ -73,15 +76,15 @@ async def get_collection(
     """Get a collection with the given name."""
     try:
         collection = await client.get_collection(collection_name)
-    except Exception as e:
-        raise fastapi.HTTPException(
-            status_code=500,
-            detail=str(e),
-        )
-    if collection is None:
-        raise fastapi.HTTPException(
-            status_code=404,
+    except CollectionNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection with name {collection_name} does not exist",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting collection {collection_name}: {e}",
         )
     return collection
 
@@ -94,4 +97,10 @@ async def list_collections(
     client: StoreClient,
 ):
     """List all collections."""
-    return await client.list_collections()
+    try:
+        return await client.list_collections()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error listing collections: {e}",
+        )

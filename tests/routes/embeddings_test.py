@@ -6,7 +6,11 @@ from httpx import AsyncClient
 
 from vectorapi import main
 from vectorapi.embedder import Embedder
-from vectorapi.routes.embeddings import EmbeddingRequest, EmbeddingResponse, SimilarityRequest
+from vectorapi.routes.embeddings import (
+    EmbeddingRequest,
+    EmbeddingResponse,
+    SimilarityRequest,
+)
 
 pytestmark = pytest.mark.asyncio
 

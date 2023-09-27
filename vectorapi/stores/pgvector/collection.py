@@ -8,11 +8,14 @@ from sqlalchemy import String, delete, select, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
-from sqlalchemy.orm import Mapped, mapped_column, declared_attr
-from vectorapi.models.collection import Collection
-from vectorapi.models.collection import CollectionPoint, CollectionPointResult
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column
+
+from vectorapi.models.collection import (
+    Collection,
+    CollectionPoint,
+    CollectionPointResult,
+)
 from vectorapi.stores.exceptions import CollectionPointNotFound
-from sqlalchemy.ext.asyncio import async_sessionmaker
 from vectorapi.stores.pgvector.base import Base
 
 
@@ -149,7 +152,9 @@ class PGVectorCollection(Collection):
         async with self.session_maker() as session:
             result = await self.table.read_by_id(session=session, point_id=id)
             if result is None:
-                raise CollectionPointNotFound(f"Collection point with id {id} not found in collection {self.name}")
+                raise CollectionPointNotFound(
+                    f"Collection point with id {id} not found in collection {self.name}"
+                )
             return CollectionPoint(
                 id=result.id, embedding=result.embedding, metadata=result.metadatas
             )
