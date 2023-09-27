@@ -75,7 +75,7 @@ class NumpyCollection(Collection):
     #     pass
 
     async def query(
-        self, embedding: List[float], limit: int, filters: Optional[Dict[str, Any]] = None
+        self, embedding: List[float], limit: int, filter: Optional[Dict[str, Any]] = None
     ) -> List[CollectionPointResult]:
         logger.debug(f"Querying collection {self.name}")
         # search nearest embeddings with cosine similarity, return top N

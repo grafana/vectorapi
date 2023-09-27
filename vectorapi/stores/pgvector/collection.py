@@ -120,7 +120,7 @@ class PGVectorCollection(Collection):
         async with self.session_maker() as session:
             await self.table.delete(session=session, id=id)
 
-    async def query(self, query: List[float], limit: int = 10, filters: Optional[Dict[str, Any]] = None) -> List[CollectionPointResult]:
+    async def query(self, query: List[float], limit: int = 10, filter: Optional[Dict[str, Any]] = None) -> List[CollectionPointResult]:
         if self.table is None:
             return []
 
@@ -129,8 +129,8 @@ class PGVectorCollection(Collection):
         stmt = stmt.column(
             (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
         )
-        if filters is not None:
-            conditions = self._build_filters(self.table.metadatas, filters)
+        if filter is not None:
+            conditions = self._build_filter_conditions(self.table.metadatas, filter)
             stmt = stmt.filter(conditions)
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
@@ -179,16 +179,16 @@ class PGVectorCollection(Collection):
             else:
                 raise e
 
-    def _build_filters(self, col: Column, filters: Dict[str, Any]):
+    def _build_filter_conditions(self, col: Column, filter: Dict[str, Any]):
         ##TODO: Check data types and edge cases
-        key, value = filters.popitem()
+        key, value = filter.popitem()
 
         if key in ["$and", "$or"]:
             if key == "$and":
-                return and_(*[self._build_filters(col, filter) for filter in value])
+                return and_(*[self._build_filter_conditions(col, filter) for filter in value])
 
             if key == "$or":
-                return or_(*[self._build_filters(col, filter) for filter in value])
+                return or_(*[self._build_filter_conditions(col, filter) for filter in value])
 
         operator, filter_value = value.popitem()
 

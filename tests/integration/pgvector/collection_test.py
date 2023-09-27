@@ -135,7 +135,7 @@ class TestPGVectorCollection:
             ("filter2", ["2", "4"], [{"metadata_filter": "filter2"}, {"metadata_filter": "filter2"}]),
         ],
     )
-    async def test_query_point_with_filters(self, client, filter_value, expected_ids, expected_metadata):
+    async def test_query_point_with_filter(self, client, filter_value, expected_ids, expected_metadata):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -151,7 +151,7 @@ class TestPGVectorCollection:
 
         # Query points with eq filter
         results = await collection.query(
-            [1.0, 2.0], limit=2, filters={"metadata_filter": {"$eq": filter_value}}
+            [1.0, 2.0], limit=2, filter={"metadata_filter": {"$eq": filter_value}}
         )
         assert len(results) == 2
 
@@ -175,7 +175,7 @@ class TestPGVectorCollection:
             CollectionPointFilterError,
         ) as excinfo:
             await collection.query(
-                [1.0, 2.0], limit=2, filters={"metadata_filter": {"$ee": "filter1"}}
+                [1.0, 2.0], limit=2, filter={"metadata_filter": {"$ee": "filter1"}}
             )
         assert "Unsupported operator $ee" in str(excinfo.value)
 
@@ -185,7 +185,7 @@ class TestPGVectorCollection:
             match=f"Filter value must be a string",
         ):
             await collection.query(
-                [1.0, 2.0], limit=2, filters={"metadata_filter": {"$eq": ["filter1"]}}
+                [1.0, 2.0], limit=2, filter={"metadata_filter": {"$eq": ["filter1"]}}
             )
 
         # Cleanup
@@ -193,7 +193,7 @@ class TestPGVectorCollection:
 
     @pytest.mark.integration
     @pytest.mark.parametrize(
-        "filters, expected_count, expected_metadata",
+        "filter, expected_count, expected_metadata",
         [
             (
                 {"$or": [{"metadata_filter_1": {"$eq": "filter1"}}, {"metadata_filter_1": {"$eq": "filter2"}}]},
@@ -207,7 +207,7 @@ class TestPGVectorCollection:
             ),
         ],
     )
-    async def test_query_point_logical_operators_filters(self, client, filters, expected_count, expected_metadata):
+    async def test_query_point_logical_operators_filter(self, client, filter, expected_count, expected_metadata):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -216,7 +216,7 @@ class TestPGVectorCollection:
         await self._insert_point(client, "2", [1.0, 2.0], {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"})
         await self._insert_point(client, "3", [1.0, 2.0], {"metadata_filter_1": "filter3", "metadata_filter_2": "filter3"})
 
-        results = await collection.query([1.0, 2.0], limit=3, filters=filters)
+        results = await collection.query([1.0, 2.0], limit=3, filter=filter)
 
         assert len(results) == expected_count
         for i, result in enumerate(results):

@@ -89,7 +89,7 @@ async def get_point(
 class QueryPointRequest(BaseModel):
     query: List[float]
     top_k: int = 10
-    filters: Optional[Dict[str, Any]] = None
+    filter: Optional[Dict[str, Any]] = None
 
 
 @router.post(
@@ -106,7 +106,7 @@ async def query_points(
 
     logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
-        points = await collection.query(request.query, request.top_k, request.filters)
+        points = await collection.query(request.query, request.top_k, request.filter)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
