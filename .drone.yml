@@ -121,6 +121,54 @@ depends_on:
   - docker-linux-arm64
 
 ---
+# Run integration test
+
+kind: pipeline
+type: docker
+name: Integration tests
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  # Push the docker image on main/tags.
+  - name: Build and run tests
+    image: docker:dind
+    volumes:
+    - name: dockersock
+      path: /var/run
+    commands: [
+      "apk add make",
+      # wait for host Docker to start when using DinD (30s timeout)
+      "counter=0; until [ $counter -gt 30 ] || [ $(docker ps > /dev/null 2>&1; echo $?) -eq 0 ]; do sleep 1; let counter+=1;  echo \"($counter) waiting for docker to start..\"; done",
+      "mkdir -p ~/.docker",
+      "echo $dockerconfigjson > ~/.docker/config.json",
+      "make integration-ci",
+      ]
+    environment:
+      COMPOSE_DOCKER_CLI_BUILD: 1
+      DOCKER_BUILDKIT: 1
+      dockerconfigjson: 
+        from_secret: 'dockerconfigjson'
+    when:
+      event:
+        include: ['pull_request']
+
+
+services:
+- name: docker
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
+
+volumes:
+- name: dockersock
+  temp: {}
+
+---
 # Secret for pulling docker images.
 kind: secret
 name: dockerconfigjson

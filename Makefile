@@ -33,6 +33,12 @@ integration:
 	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml down
 .PHONY: integration
 
+integration-ci: 
+	docker compose build api
+	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml run --rm api
+	docker compose -p integration-tests down
+.PHONY: integration
+
 test:
 	poetry run pytest -v
 .PHONY: test
