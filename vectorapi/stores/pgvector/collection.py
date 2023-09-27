@@ -132,8 +132,9 @@ class PGVectorCollection(Collection):
             (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
         )
         if filter is not None:
-            conditions = self._build_filter_conditions(self.table.metadatas, filter)
-            stmt = stmt.filter(conditions)
+            filter_expressions = self._build_filter_expressions(self.table.metadatas, filter)
+            stmt = stmt.filter(filter_expressions)
+
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
@@ -181,16 +182,16 @@ class PGVectorCollection(Collection):
             else:
                 raise e
 
-    def _build_filter_conditions(self, col: Column, filter: Dict[str, Any]):
+    def _build_filter_expressions(self, col: Column, filter: Dict[str, Any]):
         ##TODO: Check data types and edge cases
         key, value = filter.popitem()
 
         if key in ["$and", "$or"]:
             if key == "$and":
-                return and_(*[self._build_filter_conditions(col, filter) for filter in value])
+                return and_(*[self._build_filter_expressions(col, filter) for filter in value])
 
             if key == "$or":
-                return or_(*[self._build_filter_conditions(col, filter) for filter in value])
+                return or_(*[self._build_filter_expressions(col, filter) for filter in value])
 
         operator, filter_value = value.popitem()
 
