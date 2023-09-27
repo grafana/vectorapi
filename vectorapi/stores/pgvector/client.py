@@ -36,6 +36,7 @@ class PGVectorClient(Client):
         return collection
 
     async def get_collection(self, name: str) -> Collection:
+        await self.sync()
         logger.info(f"Getting collection name={name}")
         try:
             if self._collection_exists(name):
@@ -70,6 +71,7 @@ class PGVectorClient(Client):
             raise e
 
     async def list_collections(self):
+        await self.sync()
         logger.info("Listing collection..")
         return [
             {"name": table.name, "dimension": table.c.embedding.type.dim}
