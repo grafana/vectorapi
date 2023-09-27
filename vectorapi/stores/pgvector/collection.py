@@ -120,7 +120,9 @@ class PGVectorCollection(Collection):
         async with self.session_maker() as session:
             await self.table.delete(session=session, id=id)
 
-    async def query(self, query: List[float], limit: int = 10, filter: Optional[Dict[str, Any]] = None) -> List[CollectionPointResult]:
+    async def query(
+        self, query: List[float], limit: int = 10, filter: Optional[Dict[str, Any]] = None
+    ) -> List[CollectionPointResult]:
         if self.table is None:
             return []
 
@@ -205,6 +207,7 @@ class PGVectorCollection(Collection):
             return operation != value
 
         raise CollectionPointFilterError(f"Unsupported operator {operator}")
+
 
 def is_duplicate_key_error(error_message):
     return "duplicate key value violates unique constraint" in error_message
