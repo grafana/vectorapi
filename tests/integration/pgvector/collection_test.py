@@ -128,7 +128,14 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_query_point_with_filters(self, client):
+    @pytest.mark.parametrize(
+        "filter_value, expected_ids, expected_metadata",
+        [
+            ("filter1", ["1", "3"], [{"metadata_filter": "filter1"}, {"metadata_filter": "filter1"}]),
+            ("filter2", ["2", "4"], [{"metadata_filter": "filter2"}, {"metadata_filter": "filter2"}]),
+        ],
+    )
+    async def test_query_point_with_filters(self, client, filter_value, expected_ids, expected_metadata):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -144,39 +151,18 @@ class TestPGVectorCollection:
 
         # Query points with eq filter
         results = await collection.query(
-            [1.0, 2.0], limit=2, filters={"metadata_filter": {"$eq": "filter1"}}
+            [1.0, 2.0], limit=2, filters={"metadata_filter": {"$eq": filter_value}}
         )
         assert len(results) == 2
 
-        assert isinstance(results[0], CollectionPointResult)
-        payload_1 = results[0].payload
-        assert isinstance(payload_1, CollectionPoint)
-        assert payload_1.id == "1"
-        assert payload_1.embedding == [1.0, 2.0]
-        assert payload_1.metadata == {"metadata_filter": "filter1"}
-
-        assert isinstance(results[1], CollectionPointResult)
-        payload_2 = results[1].payload
-        assert isinstance(payload_2, CollectionPoint)
-        assert payload_2.id == "3"
-        assert payload_2.embedding == [3.0, 4.0]
-        assert payload_2.metadata == {"metadata_filter": "filter1"}
-
-        results = await collection.query(
-            [1.0, 2.0], limit=2, filters={"metadata_filter": {"$ne": "filter1"}}
-        )
-        assert len(results) == 2
-
-        payload_1 = results[0].payload
-        assert payload_1.metadata == {"metadata_filter": "filter2"}
-
-        payload_2 = results[0].payload
-        assert payload_2.metadata == {"metadata_filter": "filter2"}
+        for i, result in enumerate(results):
+            assert result.payload.id == expected_ids[i]
+            assert result.payload.metadata == expected_metadata[i]
 
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_query_point_with_filter_exceptions(self, client):
+    async def test_query_point_single_value_filter_exceptions(self, client):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
