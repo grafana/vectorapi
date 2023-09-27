@@ -29,7 +29,6 @@ steps:
 trigger:
   ref:
     - "refs/heads/main"
-    - "refs/heads/drone-multi-arch-image"
 
 ---
 # Build and push 'latest' Docker image.
@@ -62,7 +61,6 @@ steps:
 trigger:
   ref:
     - "refs/heads/main"
-    - "refs/heads/drone-multi-arch-image"
 
 ---
 # Push manifest for multi-arch image.
@@ -117,7 +115,6 @@ volumes:
 trigger:
   ref:
     - "refs/heads/main"
-    - "refs/heads/drone-multi-arch-image"
 
 depends_on:
   - docker-linux-amd64
