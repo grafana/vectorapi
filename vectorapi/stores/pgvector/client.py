@@ -36,16 +36,14 @@ class PGVectorClient(Client):
         return collection
 
     async def get_collection(self, name: str) -> Collection:
-        await self.sync()
         logger.info(f"Getting collection name={name}")
         try:
             if self._collection_exists(name):
-                table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
-                return PGVectorCollection(
-                    name=name,
-                    dimension=table.c.embedding.type.dim,
-                    session_maker=self.bound_async_sessionmaker,
-                )
+                return self._construct_collection(name)
+
+            await self.sync()
+            if self._collection_exists(name):
+                return self._construct_collection(name)
             else:
                 raise CollectionNotFound(
                     f"Table {name} does not exist in schema {VECTORAPI_STORE_SCHEMA}"
@@ -53,6 +51,14 @@ class PGVectorClient(Client):
         except Exception as e:
             logger.exception(e)
             raise e
+
+    def _construct_collection(self, name: str) -> Collection:
+        table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
+        return PGVectorCollection(
+            name=name,
+            dimension=table.c.embedding.type.dim,
+            session_maker=self.bound_async_sessionmaker,
+        )
 
     async def delete_collection(self, name: str):
         logger.info(f"Deleting collection name={name}")
