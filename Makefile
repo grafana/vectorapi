@@ -1,4 +1,4 @@
-DOCKER_TAG = vectorapi:latest
+DOCKER_TAG = us.gcr.io/kubernetes-dev/vectorapi:latest
 VOLUMES = --mount type=bind,source=$(PWD),target=/app
 PORT := 8889
 VECTORAPI_STORE_CLIENT := memory
