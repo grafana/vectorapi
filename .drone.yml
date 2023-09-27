@@ -3,7 +3,7 @@
 
 kind: pipeline
 type: docker
-name: Docker build
+name: docker-linux-amd64
 
 platform:
   os: linux
@@ -24,11 +24,79 @@ steps:
       config:
         from_secret: gcr_admin
       tags:
+        - ${DRONE_COMMIT_SHA:0:10}-linux-amd64
+
+trigger:
+  # TODO: replace with refs/head/main before merging
+  event:
+  - pull_request
+
+---
+# Build and push 'latest' Docker image.
+
+kind: pipeline
+type: docker
+name: docker-linux-arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+  # Push the docker image on main/tags.
+  - name: Push Docker Image
+    image: plugins/docker
+    environment:
+      DOCKER_BUILDKIT: 1
+    settings:
+      repo: us.gcr.io/kubernetes-dev/vectorapi
+      cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
+      target: production
+      build_args:
+        - BUILDKIT_INLINE_CACHE=1
+      config:
+        from_secret: gcr_admin
+      tags:
+        - ${DRONE_COMMIT_SHA:0:10}-linux-arm64
+
+trigger:
+  # TODO: replace with refs/head/main before merging
+  event:
+  - pull_request
+
+---
+# Push manifest for multi-arch image.
+type: docker
+kind: pipeline
+name: docker-manifest
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: manifest
+    pull: always
+    image: plugins/manifest
+    settings:
+      target: us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}
+      template: us.gcr.io/kubernetes-dev/vectorapi:${DRONE_COMMIT_SHA:0:10}-OS-ARCH
+      platforms:
+        - linux/amd64
+        - linux/arm64
+      config:
+        from_secret: gcr_admin
+      tags:
         - latest
-        - ${DRONE_COMMIT_SHA:0:10}
-    when:
-      ref:
-        - refs/heads/main
+
+trigger:
+  # TODO: replace with refs/head/main before merging
+  event:
+  - pull_request
+
+depends_on:
+  - docker-linux-amd64
+  - docker-linux-arm64
 
 ---
 # Secret for pulling docker images.
