@@ -17,7 +17,7 @@ steps:
       DOCKER_BUILDKIT: 1
     settings:
       repo: us.gcr.io/kubernetes-dev/vectorapi
-      cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
+      cache_from: us.gcr.io/kubernetes-dev/vectorapi
       target: production
       build_args:
         - BUILDKIT_INLINE_CACHE=1
@@ -50,7 +50,7 @@ steps:
       DOCKER_BUILDKIT: 1
     settings:
       repo: us.gcr.io/kubernetes-dev/vectorapi
-      cache_from: us.gcr.io/kubernetes-dev/vectorapi:latest
+      cache_from: us.gcr.io/kubernetes-dev/vectorapi
       target: production
       build_args:
         - BUILDKIT_INLINE_CACHE=1
