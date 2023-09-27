@@ -121,6 +121,52 @@ depends_on:
   - docker-linux-arm64
 
 ---
+# Run integration test
+
+kind: pipeline
+type: docker
+name: Integration tests
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  # Push the docker image on main/tags.
+  - name: Build and run tests
+    image: python:3.11-bullseye
+    commands: [
+      "curl -sSL https://install.python-poetry.org | python -",
+      "export PATH=$POETRY_HOME/bin:$PATH",
+      "poetry install",
+      ". .venv/bin/activate",
+      "pytest -m integration --integration",
+    ]
+    environment:
+      POETRY_VERSION: '1.6.1'
+      POETRY_VIRTUALENVS_IN_PROJECT: true
+      POETRY_HOME: '/drone/src/.poetry'
+      POSTGRES_HOST: db
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+      VECTORAPI_STORE_SCHEMA: test_schema
+      VECTORAPI_STORE_CLIENT: pgvector
+
+    when:
+      event:
+        include: ['pull_request']
+
+services:
+- name: db
+  image: ankane/pgvector
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    POSTGRES_DB: postgres
+
+---
 # Secret for pulling docker images.
 kind: secret
 name: dockerconfigjson
