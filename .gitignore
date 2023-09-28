@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .sentence_transformers
 .DS_Store
+.drone.yml
 
 # C extensions
 *.so
