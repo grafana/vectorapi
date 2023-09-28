@@ -197,11 +197,11 @@ local python_poetry_test_steps(depends_on=[]) =
     ], image='python:%s-bullseye' % pythonVersion) + { environment: poetryWorkspaceHome, depends_on: ['setup python-venv'] },
     step('lint', [
       '. .venv/bin/activate',
-      'ruff check -v .',
+      'make lint',
     ], image='python:%s-bullseye' % pythonVersion) + { depends_on: ['setup python-venv'] },
     step('static analysis', [
       '. .venv/bin/activate',
-      'mypy .',
+      'make static-analysis',
     ], image='python:%s-bullseye' % pythonVersion) + {
       environment: poetryWorkspaceHome,
       depends_on: ['setup python-venv'],
