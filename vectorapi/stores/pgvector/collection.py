@@ -203,12 +203,11 @@ class PGVectorCollection(Collection):
             - "$ne": Inequality operator.
         """
         ##TODO: Check data types and edge cases
-        key, value = filter.copy().popitem()
+        key, value = list(filter_dict.items())[-1]
 
         if key == "$and":
             return and_(*[self._build_filter_expressions(col, filter) for filter in value])
-
-        if key == "$or":
+        elif key == "$or":
             return or_(*[self._build_filter_expressions(col, filter) for filter in value])
 
         operator, filter_value = value.copy().popitem()
@@ -221,8 +220,7 @@ class PGVectorCollection(Collection):
 
         if "$eq" == operator:
             return operation == value
-
-        if "$ne" == operator:
+        elif "$ne" == operator:
             return operation != value
 
         raise CollectionPointFilterError(f"Unsupported operator {operator}")
