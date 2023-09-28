@@ -91,6 +91,8 @@ class QueryPointRequest(BaseModel):
     top_k: int = 10
     filter: Optional[Dict[str, Any]] = None
 
+    class Config:
+        extra = "forbid"
 
 @router.post(
     "/{collection_name}/query",
@@ -98,10 +100,17 @@ class QueryPointRequest(BaseModel):
 )
 async def query_points(
     collection_name: str,
-    request: QueryPointRequest,
+    request: dict,
     client: StoreClient,
 ):
     """Query collection with a given embedding query."""
+    try:
+        request = QueryPointRequest(**request)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Extra inputs are not permitted: {e}",
+        )
     collection = await get_collection(collection_name, client)
 
     logger.debug(f"Searching {request.top_k} embeddings for query")
