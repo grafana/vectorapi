@@ -25,7 +25,7 @@ def _get_log_level(record: logging.LogRecord) -> int | str:
 class InterceptHandler(logging.Handler):
     """
     Default handler from examples in loguru documentaion.
-    See https://loguru.readthedocs.io/en/stable/overview.html#entirely-compatible-with-standard-logging  # noqa
+    See https://loguru.readthedocs.io/en/stable/overview.html
     """
 
     def emit(self, record: logging.LogRecord):
