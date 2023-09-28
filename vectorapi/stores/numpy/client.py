@@ -1,6 +1,7 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from vectorapi.models.client import Client
+from vectorapi.stores.exceptions import CollectionNotFound
 from vectorapi.stores.numpy.collection import NumpyCollection
 
 
@@ -14,8 +15,11 @@ class NumpyClient(Client):
         self.collections[name] = NumpyCollection(name, dimension)
         return self.collections[name]
 
-    async def get_collection(self, name: str) -> Optional[NumpyCollection]:
-        return self.collections.get(name)
+    async def get_collection(self, name: str) -> NumpyCollection:
+        collection = self.collections.get(name)
+        if collection is None:
+            raise CollectionNotFound(f"Collection with name {name} does not exist")
+        return collection
 
     async def delete_collection(self, name: str):
         if await self.get_collection(name):
@@ -23,5 +27,5 @@ class NumpyClient(Client):
         else:
             raise ValueError(f"Collection with name {name} does not exist")
 
-    async def list_collections(self) -> List[NumpyCollection]:
+    async def list_collections(self) -> List[NumpyCollection]:  # type: ignore
         return list(self.collections.values())
