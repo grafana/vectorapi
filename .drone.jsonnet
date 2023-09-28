@@ -191,6 +191,18 @@ local python_poetry_test_steps(depends_on=[]) =
     mount=['.venv'],
     depends_on=['setup poetry'],
   ) + [
+    step('poetry lock check', [
+      'export PATH=$POETRY_HOME/bin:$PATH',
+      'poetry lock --check',
+    ], image='python:%s-bullseye' % pythonVersion) + { environment: poetryWorkspaceHome, depends_on: ['setup python-venv'] },
+    step('lint', [
+      '. .venv/bin/activate',
+      'ruff check -v .',
+    ], image='python:%s-bullseye' % pythonVersion) + { depends_on: ['setup python-venv'] },
+    step('static analysis', [
+      '. .venv/bin/activate',
+      'mypy .',
+    ], image='python:%s-bullseye' % pythonVersion) + { environment: poetryWorkspaceHome, depends_on: ['setup python-venv'] },
     step('test', [
       '. .venv/bin/activate',
       'make test',
