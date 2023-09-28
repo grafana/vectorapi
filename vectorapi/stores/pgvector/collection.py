@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Dict, List, Type
+from typing import Any, AsyncIterator, Dict, List, Type, Optional
 
 from pgvector.sqlalchemy import Vector
 from pydantic import ConfigDict, Field
-from sqlalchemy import String, delete, select, text
+from sqlalchemy import String, Column, cast, delete, select, text, and_, or_
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
@@ -15,7 +15,7 @@ from vectorapi.models.collection import (
     CollectionPoint,
     CollectionPointResult,
 )
-from vectorapi.stores.exceptions import CollectionPointNotFound
+from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.stores.pgvector.base import Base
 
 
@@ -120,7 +120,9 @@ class PGVectorCollection(Collection):
         async with self.session_maker() as session:
             await self.table.delete(session=session, id=id)
 
-    async def query(self, query: List[float], limit: int = 10) -> List[CollectionPointResult]:
+    async def query(
+        self, query: List[float], limit: int = 10, filter_dict: Optional[Dict[str, Any]] = None
+    ) -> List[CollectionPointResult]:
         if self.table is None:
             return []
 
@@ -129,6 +131,10 @@ class PGVectorCollection(Collection):
         stmt = stmt.column(
             (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
         )
+        if filter_dict is not None:
+            filter_expressions = self._build_filter_expressions(self.table.metadatas, filter_dict)
+            stmt = stmt.filter(filter_expressions)
+
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
@@ -175,6 +181,49 @@ class PGVectorCollection(Collection):
                 await self.update(id, embedding, metadata)
             else:
                 raise e
+
+    def _build_filter_expressions(self, col: Column, filter_dict: Dict[str, Any]):
+        """
+        Recursively build SQLAlchemy filter expressions based on the filter_dict dictionary.
+
+        Args:
+            col (sqlalchemy.sql.Column): The metadata column of the table on which to apply the filter.
+            filter_dict (Dict[str, Any]): A dictionary representing the filter criteria.
+
+        Returns:
+            sqlalchemy.sql.expression.ColumnElement: A SQLAlchemy filter expression.
+
+        Raises:
+            CollectionPointFilterError: If the filter criteria are not valid or supported.
+
+        Supported Filter Operators:
+            - "$and": Logical AND operator for combining multiple filter conditions. Uses recursion.
+            - "$or": Logical OR operator for combining multiple filter conditions. Uses recursion.
+            - "$eq": Equality operator.
+            - "$ne": Inequality operator.
+        """
+        ##TODO: Check data types and edge cases
+        key, value = list(filter_dict.items())[-1]
+
+        if key == "$and":
+            return and_(*[self._build_filter_expressions(col, filter) for filter in value])
+        elif key == "$or":
+            return or_(*[self._build_filter_expressions(col, filter) for filter in value])
+
+        operator, filter_value = value.copy().popitem()
+
+        if not isinstance(filter_value, str):
+            raise CollectionPointFilterError("Filter value must be a string")
+
+        value = cast(filter_value, postgresql.JSONB)
+        operation = col.op("->")(key)
+
+        if "$eq" == operator:
+            return operation == value
+        elif "$ne" == operator:
+            return operation != value
+
+        raise CollectionPointFilterError(f"Unsupported operator {operator}")
 
 
 def is_duplicate_key_error(error_message):

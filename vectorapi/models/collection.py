@@ -41,7 +41,7 @@ class Collection(BaseModel, ABC, extra=Extra.allow):
 
     @abstractmethod
     async def query(
-        self, embedding: List[float], limit: int, filters: Optional[Dict[str, Any]] = None
+        self, embedding: List[float], limit: int, filter: Optional[Dict[str, Any]] = None
     ) -> List[CollectionPointResult]:
         raise NotImplementedError()
 
