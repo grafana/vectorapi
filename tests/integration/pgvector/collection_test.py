@@ -2,10 +2,11 @@ import os
 
 import pytest
 import pytest_asyncio
+import json
 from sqlalchemy import text
 
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.stores.exceptions import CollectionPointNotFound
+from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.stores.pgvector.client import PGVectorClient
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
@@ -127,6 +128,144 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
+    @pytest.mark.parametrize(
+        "filter_value, expected_ids, expected_metadata",
+        [
+            (
+                "filter1",
+                ["1", "3"],
+                [{"metadata_filter": "filter1"}, {"metadata_filter": "filter1"}],
+            ),
+            (
+                "filter2",
+                ["2", "4"],
+                [{"metadata_filter": "filter2"}, {"metadata_filter": "filter2"}],
+            ),
+        ],
+    )
+    async def test_query_point_with_filter(
+        self, client, filter_value, expected_ids, expected_metadata
+    ):
+        # Create collection
+        collection = await client.create_collection(test_collection_name, 2)
+
+        # Insert points
+        await self._insert_point(client, "1", [1.0, 2.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "2", [1.0, 2.0], {"metadata_filter": "filter2"})
+
+        await self._insert_point(client, "3", [3.0, 4.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "4", [3.0, 4.0], {"metadata_filter": "filter2"})
+
+        await self._insert_point(client, "5", [5.0, 6.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "6", [5.0, 6.0], {"metadata_filter": "filter2"})
+
+        # Query points with eq filter
+        results = await collection.query(
+            [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$eq": filter_value}}
+        )
+        assert len(results) == 2
+
+        for i, result in enumerate(results):
+            assert result.payload.id == expected_ids[i]
+            assert result.payload.metadata == expected_metadata[i]
+
+        await self._cleanup_collection(client)
+
+    @pytest.mark.integration
+    async def test_query_point_single_value_filter_exceptions(self, client):
+        # Create collection
+        collection = await client.create_collection(test_collection_name, 2)
+
+        # Insert points
+        await self._insert_point(client, "1", [1.0, 2.0], {"metadata_filter": "filter1"})
+        await self._insert_point(client, "2", [1.0, 2.0], {"metadata_filter": "filter2"})
+
+        ## Assert raised exception with unsupported filter
+        with pytest.raises(
+            CollectionPointFilterError,
+        ) as excinfo:
+            await collection.query(
+                [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$ee": "filter1"}}
+            )
+        assert "Unsupported operator $ee" in str(excinfo.value)
+
+        ## Assert raised exception with target filter value not string
+        with pytest.raises(
+            CollectionPointFilterError,
+            match=f"Filter value must be a string",
+        ):
+            await collection.query(
+                [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$eq": ["filter1"]}}
+            )
+
+        # Cleanup
+        await self._cleanup_collection(client)
+
+    @pytest.mark.integration
+    @pytest.mark.parametrize(
+        "filter_dict, expected_count, expected_metadata",
+        [
+            (
+                {
+                    "$or": [
+                        {"metadata_filter_1": {"$eq": "filter1"}},
+                        {"metadata_filter_1": {"$eq": "filter2"}},
+                    ]
+                },
+                2,
+                [
+                    {"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"},
+                    {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"},
+                ],
+            ),
+            (
+                {
+                    "$and": [
+                        {"metadata_filter_1": {"$eq": "filter1"}},
+                        {"metadata_filter_2": {"$eq": "filter1"}},
+                    ]
+                },
+                1,
+                [{"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"}],
+            ),
+        ],
+    )
+    async def test_query_point_logical_operators_filter(
+        self, client, filter_dict, expected_count, expected_metadata
+    ):
+        # Create collection
+        collection = await client.create_collection(test_collection_name, 2)
+
+        # Insert points
+        await self._insert_point(
+            client,
+            "1",
+            [1.0, 2.0],
+            {"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"},
+        )
+        await self._insert_point(
+            client,
+            "2",
+            [1.0, 2.0],
+            {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"},
+        )
+        await self._insert_point(
+            client,
+            "3",
+            [1.0, 2.0],
+            {"metadata_filter_1": "filter3", "metadata_filter_2": "filter3"},
+        )
+
+        results = await collection.query([1.0, 2.0], limit=3, filter_dict=filter_dict)
+
+        assert len(results) == expected_count
+        for i, result in enumerate(results):
+            assert result.payload.metadata == expected_metadata[i]
+
+        # Cleanup
+        await self._cleanup_collection(client)
+
+    @pytest.mark.integration
     async def test_upsert_point(self, client):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -154,7 +293,7 @@ class TestPGVectorCollection:
             return [row for row in result.all()]
 
     async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
-        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{metadata}')"
+        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')"
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))
 

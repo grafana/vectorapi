@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any, Optional
 
 from fastapi import APIRouter, HTTPException, Response, status
 from loguru import logger
@@ -89,6 +89,7 @@ async def get_point(
 class QueryPointRequest(BaseModel):
     query: List[float]
     top_k: int = 10
+    filter: Optional[Dict[str, Any]] = None
 
 
 @router.post(
@@ -105,7 +106,7 @@ async def query_points(
 
     logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
-        points = await collection.query(request.query, request.top_k)
+        points = await collection.query(request.query, request.top_k, request.filter)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
@@ -117,6 +118,7 @@ async def query_points(
 
 class SearchPointRequest(BaseModel):
     input: str
+    filter: Optional[Dict[str, Any]] = None
     top_k: int = 10
     model_name: str = "BAAI/bge-small-en-v1.5"
 
@@ -160,7 +162,7 @@ async def search(
 
     logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
-        points = await collection.query(vector.tolist(), request.top_k)
+        points = await collection.query(vector.tolist(), request.top_k, filter_dict=request.filter)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
