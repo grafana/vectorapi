@@ -191,7 +191,7 @@ class PGVectorCollection(Collection):
             filter (Dict[str, Any]): A dictionary representing the filter criteria.
 
         Returns:
-            sqlalchemy.sql.elements.ClauseElement: A SQLAlchemy filter expression.
+            sqlalchemy.sql.expression.ColumnElement: A SQLAlchemy filter expression.
 
         Raises:
             CollectionPointFilterError: If the filter criteria are not valid or supported.
