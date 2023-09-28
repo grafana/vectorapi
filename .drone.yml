@@ -154,9 +154,10 @@ steps:
       VECTORAPI_STORE_SCHEMA: test_schema
       VECTORAPI_STORE_CLIENT: pgvector
 
-    when:
-      event:
-        include: ['pull_request']
+trigger:
+  ref:
+  - 'refs/heads/main'
+  - 'refs/pull/**'
 
 services:
 - name: db
