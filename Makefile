@@ -33,5 +33,9 @@ integration:
 .PHONY: integration
 
 test:
-	poetry run pytest -v
+	poetry run python -m pytest -v
+.PHONY: test
+
+test-integration:
+	poetry run python -m pytest -v tests/integration --integration
 .PHONY: test
