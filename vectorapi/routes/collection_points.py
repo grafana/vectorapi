@@ -162,7 +162,7 @@ async def search(
 
     logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
-        points = await collection.query(vector.tolist(), request.top_k, filter=request.filter)
+        points = await collection.query(vector.tolist(), request.top_k, filter_dict=request.filter)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(

@@ -161,7 +161,7 @@ class TestPGVectorCollection:
 
         # Query points with eq filter
         results = await collection.query(
-            [1.0, 2.0], limit=2, filter={"metadata_filter": {"$eq": filter_value}}
+            [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$eq": filter_value}}
         )
         assert len(results) == 2
 
@@ -185,7 +185,7 @@ class TestPGVectorCollection:
             CollectionPointFilterError,
         ) as excinfo:
             await collection.query(
-                [1.0, 2.0], limit=2, filter={"metadata_filter": {"$ee": "filter1"}}
+                [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$ee": "filter1"}}
             )
         assert "Unsupported operator $ee" in str(excinfo.value)
 
@@ -195,7 +195,7 @@ class TestPGVectorCollection:
             match=f"Filter value must be a string",
         ):
             await collection.query(
-                [1.0, 2.0], limit=2, filter={"metadata_filter": {"$eq": ["filter1"]}}
+                [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$eq": ["filter1"]}}
             )
 
         # Cleanup
@@ -203,7 +203,7 @@ class TestPGVectorCollection:
 
     @pytest.mark.integration
     @pytest.mark.parametrize(
-        "filter, expected_count, expected_metadata",
+        "filter_dict, expected_count, expected_metadata",
         [
             (
                 {
@@ -231,7 +231,7 @@ class TestPGVectorCollection:
         ],
     )
     async def test_query_point_logical_operators_filter(
-        self, client, filter, expected_count, expected_metadata
+        self, client, filter_dict, expected_count, expected_metadata
     ):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -256,7 +256,7 @@ class TestPGVectorCollection:
             {"metadata_filter_1": "filter3", "metadata_filter_2": "filter3"},
         )
 
-        results = await collection.query([1.0, 2.0], limit=3, filter=filter)
+        results = await collection.query([1.0, 2.0], limit=3, filter_dict=filter_dict)
 
         assert len(results) == expected_count
         for i, result in enumerate(results):

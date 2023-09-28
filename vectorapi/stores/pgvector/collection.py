@@ -121,7 +121,7 @@ class PGVectorCollection(Collection):
             await self.table.delete(session=session, id=id)
 
     async def query(
-        self, query: List[float], limit: int = 10, filter: Optional[Dict[str, Any]] = None
+        self, query: List[float], limit: int = 10, filter_dict: Optional[Dict[str, Any]] = None
     ) -> List[CollectionPointResult]:
         if self.table is None:
             return []
@@ -131,8 +131,8 @@ class PGVectorCollection(Collection):
         stmt = stmt.column(
             (1 - self.table.embedding.cosine_distance(query)).label("cosine_similarity")
         )
-        if filter is not None:
-            filter_expressions = self._build_filter_expressions(self.table.metadatas, filter)
+        if filter_dict is not None:
+            filter_expressions = self._build_filter_expressions(self.table.metadatas, filter_dict)
             stmt = stmt.filter(filter_expressions)
 
         stmt = stmt.limit(limit)
@@ -182,13 +182,13 @@ class PGVectorCollection(Collection):
             else:
                 raise e
 
-    def _build_filter_expressions(self, col: Column, filter: Dict[str, Any]):
+    def _build_filter_expressions(self, col: Column, filter_dict: Dict[str, Any]):
         """
-        Recursively build SQLAlchemy filter expressions based on a filter dictionary.
+        Recursively build SQLAlchemy filter expressions based on the filter_dict dictionary.
 
         Args:
             col (sqlalchemy.sql.Column): The metadata column of the table on which to apply the filter.
-            filter (Dict[str, Any]): A dictionary representing the filter criteria.
+            filter_dict (Dict[str, Any]): A dictionary representing the filter criteria.
 
         Returns:
             sqlalchemy.sql.expression.ColumnElement: A SQLAlchemy filter expression.
