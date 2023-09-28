@@ -183,17 +183,35 @@ class PGVectorCollection(Collection):
                 raise e
 
     def _build_filter_expressions(self, col: Column, filter: Dict[str, Any]):
+        """
+        Recursively build SQLAlchemy filter expressions based on a filter dictionary.
+
+        Args:
+            col (sqlalchemy.sql.Column): The metadata column of the table on which to apply the filter.
+            filter (Dict[str, Any]): A dictionary representing the filter criteria.
+
+        Returns:
+            sqlalchemy.sql.elements.ClauseElement: A SQLAlchemy filter expression.
+
+        Raises:
+            CollectionPointFilterError: If the filter criteria are not valid or supported.
+
+        Supported Filter Operators:
+            - "$and": Logical AND operator for combining multiple filter conditions. Uses recursion.
+            - "$or": Logical OR operator for combining multiple filter conditions. Uses recursion.
+            - "$eq": Equality operator.
+            - "$ne": Inequality operator.
+        """
         ##TODO: Check data types and edge cases
-        key, value = filter.popitem()
+        key, value = filter.copy().popitem()
 
-        if key in ["$and", "$or"]:
-            if key == "$and":
-                return and_(*[self._build_filter_expressions(col, filter) for filter in value])
+        if key == "$and":
+            return and_(*[self._build_filter_expressions(col, filter) for filter in value])
 
-            if key == "$or":
-                return or_(*[self._build_filter_expressions(col, filter) for filter in value])
+        if key == "$or":
+            return or_(*[self._build_filter_expressions(col, filter) for filter in value])
 
-        operator, filter_value = value.popitem()
+        operator, filter_value = value.copy().popitem()
 
         if not isinstance(filter_value, str):
             raise CollectionPointFilterError("Filter value must be a string")
