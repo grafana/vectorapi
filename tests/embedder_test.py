@@ -16,7 +16,7 @@ class TestEmbedder:
 
     def test_generate_similarity_matrix(self):
         embedder = Embedder(model_name="sentence-transformers/all-MiniLM-L12-v1")
-        embedder.generate_similarity = MagicMock(return_value=np.array([1, 2, 3]))
+        embedder.generate_similarity = MagicMock(return_value=np.array([1, 2, 3]))  # type: ignore
         result = embedder.generate_similarity("test", ["test1", "test2"])
         assert result.tolist() == [1, 2, 3]
 
