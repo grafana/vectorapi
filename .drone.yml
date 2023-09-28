@@ -139,12 +139,13 @@ steps:
       "curl -sSL https://install.python-poetry.org | python -",
       "export PATH=$POETRY_HOME/bin:$PATH",
       "poetry install",
-      ". .venv/bin/activate",
-      "pytest -m integration --integration",
+      # TODO: share env setup and split these 2 tests into separate step
+      "make test",
+      "make test-integration"
     ]
     environment:
       POETRY_VERSION: '1.6.1'
-      POETRY_VIRTUALENVS_IN_PROJECT: true
+      POETRY_VIRTUALENVS_CREATE: false
       POETRY_HOME: '/drone/src/.poetry'
       POSTGRES_HOST: db
       POSTGRES_PASSWORD: mysecretpassword
