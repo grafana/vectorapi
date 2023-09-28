@@ -103,9 +103,5 @@ class NumpyCollection(Collection):
             similarity /= np.linalg.norm(a) * np.linalg.norm(b, axis=1)
         return similarity
 
-    @classmethod
-    async def create(cls, name: str, dimension: int):
-        return cls(name, dimension)
-
     def __repr__(self):
         return f"NumpyCollection(name={self.name}, dimension={self.dimension})"
