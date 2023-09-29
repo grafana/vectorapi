@@ -1,5 +1,6 @@
 local repo = 'us.gcr.io/kubernetes-dev/vectorapi';
-local repoWithSha = '%s:${DRONE_COMMIT_SHA:0:10}' % repo;
+local sha = '${DRONE_COMMIT_SHA:0:10}';
+local repoWithSha = '%s:%s' % [repo, sha];
 local pythonVersion = '3.11';
 
 local vault_secret(name, vault_path, key) = {
@@ -102,31 +103,16 @@ local buildDockerPipeline(arch='amd64') = pipeline(
 );
 
 // Push manifest for multi-arch image.
-local dockerSock = {
-  name: 'dockersock',
-  path: '/var/run',
-};
-
 local dockerManifestPipeline = pipeline(
   name='docker-manifest',
   steps=[
     {
       name: 'manifest',
-      image: 'docker:dind',
-      volumes: [
-        dockerSock,
-      ],
+      image: 'mplatform/manifest-tool:alpine',
       commands: [
-        // wait for host Docker to start when using DinD (30s timeout)
-        'counter=0; until [ $counter -gt 30 ] || [ $(docker ps > /dev/null 2>&1; echo $?) -eq 0 ]; do sleep 1; let counter+=1;  echo "($counter) waiting for docker to start.."; done',
         'mkdir -p ~/.docker',
         'echo $dockerconfigjson > ~/.docker/config.json',
-        // push commit tag manifest
-        'docker manifest create %s %s-linux-amd64 %s-linux-arm64' % [repoWithSha, repoWithSha, repoWithSha],
-        'docker manifest push %s' % repoWithSha,
-        // push latest tag manifest
-        'docker manifest create %s:latest %s-linux-amd64 %s-linux-arm64' % [repo, repoWithSha, repoWithSha],
-        'docker manifest push %s:latest' % repo,
+        'manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template %s-OS-ARCH --tags latest --target %s' % [repoWithSha, repoWithSha],
       ],
       environment: {
         COMPOSE_DOCKER_CLI_BUILD: 1,
@@ -137,22 +123,6 @@ local dockerManifestPipeline = pipeline(
       },
     },
   ],
-  services=[
-    {
-      name: 'docker',
-      image: 'docker:dind',
-      privileged: true,
-      volumes: [
-        dockerSock,
-      ],
-    },
-  ],
-  volumes=[
-    {
-      name: 'dockersock',
-      temp: {},
-    },
-  ]
 ) + {
   depends_on: [
     'docker-linux-amd64',
