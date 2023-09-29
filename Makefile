@@ -32,10 +32,19 @@ integration:
 	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml down
 .PHONY: integration
 
+# CI test commands
+lint:
+	ruff check -v .
+.PHONY: lint
+
+static-analysis:
+	mypy .
+.PHONY: static-analysis
+
 test:
-	poetry run python -m pytest -v
+	python -m pytest -v
 .PHONY: test
 
 test-integration:
-	poetry run python -m pytest -v tests/integration --integration
+	python -m pytest -v tests/integration --integration
 .PHONY: test

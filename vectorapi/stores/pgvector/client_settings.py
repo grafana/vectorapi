@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "postgres")
     ECHO_SQL: bool = True
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> PostgresDsn:
         return PostgresDsn.build(

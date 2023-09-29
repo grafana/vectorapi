@@ -45,10 +45,5 @@ class Collection(BaseModel, ABC, extra=Extra.allow):
     ) -> List[CollectionPointResult]:
         raise NotImplementedError()
 
-    @classmethod
-    @abstractmethod
-    async def create(cls, name: str, dimension: int):
-        return cls(name, dimension)
-
     def __repr__(self):
         return f"Collection(name={self.name}, dimension={self.dimension})"
