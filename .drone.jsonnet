@@ -67,7 +67,7 @@ local dockerManifestPipeline = pipeline(
   steps=[
     {
       name: 'manifest',
-      image: 'mplatform/manifest-tool',
+      image: 'mplatform/manifest-tool:alpine',
       commands: [
         'mkdir -p ~/.docker',
         'echo $dockerconfigjson > ~/.docker/config.json',
