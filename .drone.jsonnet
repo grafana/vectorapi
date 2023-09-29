@@ -30,7 +30,6 @@ local pipeline(name, steps=[], services=[], volumes=[]) = {
   trigger+: {
     ref+: [
       'refs/heads/main',
-      'refs/heads/drone-manifest-without-dind',  // temporary, remove after testing
     ],
   },
 };
