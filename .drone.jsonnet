@@ -71,7 +71,7 @@ local dockerManifestPipeline = pipeline(
       commands: [
         'mkdir -p ~/.docker',
         'echo $dockerconfigjson > ~/.docker/config.json',
-        './manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template %s-OS-ARCH --tags latest --target %s' % [repoWithSha, repoWithSha],
+        'manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template %s-OS-ARCH --tags latest --target %s' % [repoWithSha, repoWithSha],
       ],
       environment: {
         COMPOSE_DOCKER_CLI_BUILD: 1,
