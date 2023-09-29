@@ -31,7 +31,7 @@ class Embedder:
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
-        self.dimension: int = self.model.get_sentence_embedding_dimension()  # type: ignore
+        self.dimension: int = self.model.get_sentence_embedding_dimension()
 
     @property
     def _trace_attributes(self):
@@ -52,7 +52,7 @@ class Embedder:
                 batch_size=self.batch_size,
                 device=self.device,
                 normalize_embeddings=self.normalize_embeddings,
-            )  # type: ignore
+            )
 
     def generate_similarity(self, source_sentence: str, sentences: List[str]) -> List[float]:
         source_vector = self.encode(source_sentence)

@@ -1,5 +1,6 @@
 import pytest
 
+from vectorapi.stores.exceptions import CollectionNotFound
 from vectorapi.stores.numpy.client import NumpyClient
 
 pytestmark = pytest.mark.asyncio
@@ -14,7 +15,8 @@ class TestNumpyClient:
 
     async def test_get_collection(self):
         client = NumpyClient()
-        assert await client.get_collection("test_collection") is None
+        with pytest.raises(CollectionNotFound):
+            assert await client.get_collection("test_collection")
 
         collection = await client.create_collection("test_collection", 2)
         assert await client.get_collection("test_collection") == collection
@@ -23,7 +25,8 @@ class TestNumpyClient:
         client = NumpyClient()
         await client.create_collection("test_collection", 2)
         await client.delete_collection("test_collection")
-        assert await client.get_collection("test_collection") is None
+        with pytest.raises(CollectionNotFound):
+            assert await client.get_collection("test_collection")
 
     async def test_list_collections(self):
         client = NumpyClient()

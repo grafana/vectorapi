@@ -192,7 +192,7 @@ class TestPGVectorCollection:
         ## Assert raised exception with target filter value not string
         with pytest.raises(
             CollectionPointFilterError,
-            match=f"Filter value must be a string",
+            match="Filter value must be a string",
         ):
             await collection.query(
                 [1.0, 2.0], limit=2, filter_dict={"metadata_filter": {"$eq": ["filter1"]}}
@@ -287,13 +287,13 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     async def _read_point(self, client, id):
-        stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'"
+        stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'" # noqa: E501
         async with client.engine.begin() as conn:
             result = await conn.execute(text(stmt))
             return [row for row in result.all()]
 
     async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
-        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')"
+        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')" # noqa: E501
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))
 

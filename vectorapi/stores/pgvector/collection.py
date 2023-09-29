@@ -138,7 +138,8 @@ class PGVectorCollection(Collection):
         stmt = stmt.limit(limit)
         async with self.session_maker() as session:
             query_execution = await session.execute(stmt)
-            ## After adding column cosine_similarity to stmt, the result is a tuple of (CollectionTable, cosine_similarity)
+            # After adding column cosine_similarity to stmt
+            # the result is a tuple of (CollectionTable, cosine_similarity)
             results = query_execution.all()
 
         return [
@@ -187,7 +188,7 @@ class PGVectorCollection(Collection):
         Recursively build SQLAlchemy filter expressions based on the filter_dict dictionary.
 
         Args:
-            col (sqlalchemy.sql.Column): The metadata column of the table on which to apply the filter.
+            col (sqlalchemy.sql.Column): The metadata key on which to apply the filter.
             filter_dict (Dict[str, Any]): A dictionary representing the filter criteria.
 
         Returns:
