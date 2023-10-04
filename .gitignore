@@ -5,7 +5,7 @@ __pycache__/
 .sentence_transformers
 .DS_Store
 .drone.yml
-
+*.sql
 # C extensions
 *.so
 

@@ -1,0 +1,3 @@
+FROM ankane/pgvector
+
+COPY dump.sql /docker-entrypoint-initdb.d/

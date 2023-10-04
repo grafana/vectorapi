@@ -48,3 +48,8 @@ test:
 test-integration:
 	python -m pytest -v tests/integration --integration
 .PHONY: test
+
+dump:
+	docker compose exec db pg_dump -Upostgres > dump.sql
+	docker build -f Dockerfile.db . -t db-with-data:latest
+.PHONY: dump

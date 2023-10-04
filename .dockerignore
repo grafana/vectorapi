@@ -12,3 +12,4 @@
 Dockerfile
 docker-compose.yaml
 .venv
+*.sql
