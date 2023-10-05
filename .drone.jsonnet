@@ -98,9 +98,6 @@ local buildDockerPipeline(arch='amd64') = pipeline(
         password: {
           from_secret: 'docker_password',
         },
-        // config: {
-        //   from_secret: 'gcr_admin',
-        // },
 
         tags: [
           '${DRONE_COMMIT_SHA:0:10}-linux-%s' % arch,
@@ -116,19 +113,16 @@ local dockerManifestPipeline = pipeline(
   steps=[
     {
       name: 'manifest',
-      image: 'mplatform/manifest-tool:alpine',
-      commands: [
-        'mkdir -p ~/.docker',
-        'echo $dockerconfigjson > ~/.docker/config.json',
-        'manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template %s-OS-ARCH --tags latest --target %s' % [repoWithSha, repoWithSha],
-      ],
-      environment: {
-        COMPOSE_DOCKER_CLI_BUILD: 1,
-        DOCKER_BUILDKIT: 1,
-        dockerconfigjson: {
-          from_secret: 'gcr_admin',
-        },
+      image: 'plugins/manifest',
+      username: {
+        from_secret: 'docker_username',
       },
+      password: {
+        from_secret: 'docker_password',
+      },
+      target: repoWithSha,
+      template: '%s-OS-ARCH' % repoWithSha,
+      platforms: ['linux/amd64', 'linux/arm64'],
     },
   ],
 ) + {
