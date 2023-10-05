@@ -10,6 +10,7 @@ from vectorapi.pgvector.collection import PGVectorCollection
 from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.pgvector.db import init_db_engine
 
+
 async def get_client() -> Client:
     return PGVectorClient()
 
