@@ -15,8 +15,8 @@ from vectorapi.models.collection import (
     CollectionPoint,
     CollectionPointResult,
 )
-from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
-from vectorapi.stores.pgvector.base import Base
+from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
+from vectorapi.pgvector.base import Base
 
 
 class CollectionTable(AbstractConcreteBase, Base):

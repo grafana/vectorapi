@@ -6,8 +6,8 @@ from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.schema import CreateSchema
 
-from vectorapi.stores.pgvector.client_settings import settings
-from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
+from vectorapi.pgvector.client_settings import settings
+from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 
 
 def init_db_engine():

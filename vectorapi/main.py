@@ -22,7 +22,7 @@ from vectorapi import log, responses
 from vectorapi.routes.collection_points import router as collection_points_router
 from vectorapi.routes.collections import router as collections_router
 from vectorapi.routes.embeddings import router as embeddings_routers
-from vectorapi.stores.store_client import client
+from vectorapi.store_client import client
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
