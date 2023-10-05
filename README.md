@@ -1,19 +1,104 @@
 # Vector API
 
-This directory contains a Python package with HTTP endpoints and logic for sentence embeddings.
-It uses `fastapi` for the HTTP framework, and makes use of the `pytorch` package for much of the computation.
+This Python package provides an API for sentence embeddings and managing a Vector Database powered by PostgreSQL. It utilizes the `fastapi` framework for handling HTTP requests, `pgvector`, and SQLAlchemy for Vector Database support, and relies on the `pytorch` package for embeddings computation.
 
 ## Getting started
+
+To get started with the Vector API, run:
 
 ```sh
 make up
 ```
 
-### Examples: Embeddings
+## PGVector
 
-#### Request
+### Collection Operations
 
-POST http://localhost:8889/v1/embeddings
+#### Create a collection
+
+Endpoint: POST http://localhost:8889/v1/collections/create
+
+This request calls postgres and creates a collection under `vector` schema with the following columns.
+
+- id: string
+- embedding: a list of floats with the dimension specified in the request.
+- metadata: JSON metadata column
+
+```
+{
+  "collection_name": "templates",
+  "dimension": 128
+}
+```
+
+
+_Response_
+
+```
+{
+    "name": "templates",
+    "dimension": 128
+}
+```
+
+#### Get a collection
+
+Endpoint: GET http://localhost:8889/v1/collections/{collection_name}
+
+This request calls postgres and gets the collection {collection_name}.
+
+
+_Response_
+
+```
+{
+    "name": "templates",
+    "dimension": 128
+}
+```
+
+
+#### Delete a collection
+
+Endpoint: POST http://localhost:8889/v1/collections/delete
+
+This request calls postgres and deletes the collection {collection_name}.
+
+```
+{
+  "collection_name": "templates"
+}
+
+```
+
+
+#### List collections
+
+Endpoint: GET http://localhost:8889/v1/collections
+
+This request calls postgres and get all collections created in the DB.
+
+
+_Response_
+
+```
+[
+    {
+        "name": "templates",
+        "dimension": 128
+    },
+    {
+        "name": "alerts",
+        "dimension": 384
+    },
+]
+```
+
+### Embeddings
+
+#### Calculate Embeddings
+
+Endpoint: POST http://localhost:8889/v1/embeddings
 
 ```json
 {
@@ -22,7 +107,7 @@ POST http://localhost:8889/v1/embeddings
 }
 ```
 
-#### Response
+_Response_
 
 ```
 {
@@ -38,9 +123,9 @@ POST http://localhost:8889/v1/embeddings
 }
 ```
 
-### Examples: Sentence Similarity
+#### Get Sentence Similarity
 
-POST http://localhost:8889/v1/similarity
+Endpoint: POST http://localhost:8889/v1/similarity
 
 ```json
 {
@@ -54,7 +139,7 @@ POST http://localhost:8889/v1/similarity
 }
 ```
 
-#### Response
+_Response_
 
 ```
 [
