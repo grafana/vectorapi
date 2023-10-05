@@ -6,8 +6,8 @@ import json
 from sqlalchemy import text
 
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
-from vectorapi.stores.pgvector.client import PGVectorClient
+from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
+from vectorapi.pgvector.client import PGVectorClient
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
@@ -213,8 +213,7 @@ class TestPGVectorCollection:
                     ]
                 },
                 2,
-                [
-                    {"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"},
+                [{"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"},
                     {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"},
                 ],
             ),

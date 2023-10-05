@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from vectorapi.models.collection import Collection
-from vectorapi.stores.exceptions import CollectionNotFound
+from vectorapi.exceptions import CollectionNotFound
 
 
 class Client(ABC):
