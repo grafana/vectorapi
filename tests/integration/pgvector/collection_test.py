@@ -213,7 +213,8 @@ class TestPGVectorCollection:
                     ]
                 },
                 2,
-                [{"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"},
+                [
+                    {"metadata_filter_1": "filter1", "metadata_filter_2": "filter1"},
                     {"metadata_filter_1": "filter2", "metadata_filter_2": "filter2"},
                 ],
             ),
@@ -286,13 +287,13 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     async def _read_point(self, client, id):
-        stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'" # noqa: E501
+        stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'"  # noqa: E501
         async with client.engine.begin() as conn:
             result = await conn.execute(text(stmt))
             return [row for row in result.all()]
 
     async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
-        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')" # noqa: E501
+        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')"  # noqa: E501
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))
 
