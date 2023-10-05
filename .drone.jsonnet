@@ -93,10 +93,10 @@ local buildDockerPipeline(arch='amd64') = pipeline(
           'BUILDKIT_INLINE_CACHE=1',
         ],
         username: {
-          from_secret: docker_username,
+          from_secret: 'docker_username',
         },
         password: {
-          from_secret: docker_password,
+          from_secret: 'docker_password',
         },
         // config: {
         //   from_secret: 'gcr_admin',
