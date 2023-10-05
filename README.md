@@ -14,7 +14,7 @@ make up
 
 ### Collection Operations
 
-#### Create a collection
+#### Create a collection (POST)
 
 Endpoint: POST http://localhost:8889/v1/collections/create
 
@@ -41,7 +41,7 @@ _Response_
 }
 ```
 
-#### Get a collection
+#### Get a collection (GET)
 
 Endpoint: GET http://localhost:8889/v1/collections/{collection_name}
 
@@ -58,7 +58,7 @@ _Response_
 ```
 
 
-#### Delete a collection
+#### Delete a collection (POST)
 
 Endpoint: POST http://localhost:8889/v1/collections/delete
 
@@ -72,7 +72,7 @@ This request calls postgres and deletes the collection {collection_name}.
 ```
 
 
-#### List collections
+#### List collections (GET)
 
 Endpoint: GET http://localhost:8889/v1/collections
 
@@ -93,6 +93,194 @@ _Response_
     },
 ]
 ```
+
+### Collection Point Operations
+
+#### Insert collection point (POST)
+
+Endpoint: POST http://localhost:8889/v1/{collection_name}/insert
+
+This request inserts a collection point with the specified id, embedding, and optional metadata into the collection.
+
+```
+{
+  "id": "point_id_1",
+  "embedding": [0.1, 0.2, 0.3],
+  "metadata": {
+    "key": "value"
+  }
+}
+```
+
+#### Update a collection point (POST)
+
+Endpoint: POST http://localhost:8889/v1/{collection_name}/update
+
+This request updates the collection point with the specified id with new embedding and metadata.
+
+```
+{
+  "id": "point_id_1",
+  "embedding": [0.4, 0.5, 0.6],
+  "metadata": {
+    "new_key": "new_value"
+  }
+}
+```
+
+#### Get a collection point (GET)
+
+Endpoint: GET http://localhost:8889/v1/{collection_name}/{id}
+
+This request retrieves the collection point with the specified id from the collection.
+
+_Response_
+
+```
+{
+    "id": "point_id_1",
+    "embedding": [0.4, 0.5, 0.6],
+    "metadata": {
+      "new_key": "new_value"
+    }
+}
+```
+
+#### Delete a collection point (DELETE)
+
+Endpoint: DELETE http://localhost:8889/v1/{collection_name}/delete/{id}
+
+This request deletes the collection point with the specified id from the collection.
+
+#### Query collection points (POST)
+
+Endpoint: POST http://localhost:8889/v1/collection-points/query
+
+This request performs a query on the collection points, searching for points similar to the given query vector. You can specify additional parameters like `limit` and `filter` for filtering results.
+
+```
+{
+  "query": [0.7, 0.8, 0.9],
+  "limit": 10
+}
+```
+
+_Response_
+
+```
+[
+  {
+    "id": "point_id_1",
+    "embedding": [0.4, 0.5, 0.6],
+    "metadata": {
+      "key": "new_value"
+    },
+    "cosine_similarity": 0.95
+  },
+  {
+    "id": "point_id_2",
+    "embedding": [0.5, 0.6, 0.7],
+    "metadata": {
+      "key": "value"
+    },
+    "cosine_similarity": 0.92
+  }
+]
+```
+
+#### Query collection points with advanced filtering (POST)
+
+Endpoint: POST http://localhost:8889/v1/collection-points/query
+
+##### Example 1
+```
+{
+  "query":  [0.4, 0.5, 0.6],
+  "top_k": 1,
+  "filter":
+    {
+      "key":
+        {
+          "$eq": "value"
+        }
+    },
+}
+```
+
+_Response_
+
+```
+[
+  {
+    "id": "point_id_2",
+    "embedding": [0.5, 0.6, 0.7],
+    "metadata": {
+      "key": "value"
+    },
+    "cosine_similarity": 0.92
+  }
+]
+```
+
+This filter passes the equality operator to match the column `key` from the metadata column to the `value` passed.
+The API will return the `top_k` (if available) closest points that match the filter.
+
+##### Example 2
+
+```
+{
+  "query":  [0.4, 0.5, 0.6],
+  "top_k": 10,
+  "filter": {
+    "$or": [
+      {
+        "key": {
+          "$eq": "value"
+        }
+      },
+      {
+        "key": {
+          "$eq": "new_value"
+        }
+      }
+    ]
+  },
+}
+```
+
+_Response_
+
+```
+[
+  {
+    "id": "point_id_1",
+    "embedding": [0.4, 0.5, 0.6],
+    "metadata": {
+      "key": "new_value"
+    },
+    "cosine_similarity": 0.95
+  },
+  {
+    "id": "point_id_2",
+    "embedding": [0.5, 0.6, 0.7],
+    "metadata": {
+      "key": "value"
+    },
+    "cosine_similarity": 0.92
+  }
+]
+```
+
+The `$or` operator supports passing multiple filters to the query call
+
+Supported single value filter operators are:
+- Equality: `$eq`
+- Inequality: `$ne`
+
+Supported multiple values filter operators are:
+- `$or`
+- `$and`
+
 
 ### Embeddings
 
