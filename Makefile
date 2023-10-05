@@ -27,7 +27,7 @@ docs: env
 	poetry run python -m scripts.generate_openapijson > ./docs/openapi.json
 .PHONY: docs
 
-integration: 
+test-integration:
 	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml up --build --abort-on-container-exit
 	docker compose -p integration-tests -f docker-compose.yaml -f docker-compose.tests.yaml down
 .PHONY: integration
@@ -43,8 +43,4 @@ static-analysis:
 
 test:
 	python -m pytest -v
-.PHONY: test
-
-test-integration:
-	python -m pytest -v tests/integration --integration
 .PHONY: test
