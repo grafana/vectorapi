@@ -1,4 +1,4 @@
-local repo = 'us.gcr.io/kubernetes-dev/vectorapi';
+local repo = 'grafana/vectorapi';
 local sha = '${DRONE_COMMIT_SHA:0:10}';
 local repoWithSha = '%s:%s' % [repo, sha];
 local pythonVersion = '3.11';
