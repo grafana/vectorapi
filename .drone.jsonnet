@@ -91,9 +91,16 @@ local buildDockerPipeline(arch='amd64') = pipeline(
         build_args: [
           'BUILDKIT_INLINE_CACHE=1',
         ],
-        config: {
-          from_secret: 'gcr_admin',
+        username: {
+          from_secret: docker_username,
         },
+        password: {
+          from_secret: docker_password,
+        },
+        // config: {
+        //   from_secret: 'gcr_admin',
+        // },
+
         tags: [
           '${DRONE_COMMIT_SHA:0:10}-linux-%s' % arch,
         ],
@@ -220,5 +227,7 @@ local pythonTestsPipeline = pipeline(
   // Secrets
   vault_secret('gcr_admin', 'infra/data/ci/gcr-admin', '.dockerconfigjson'),
   vault_secret('gcr_reader', 'secret/data/common/gcr', '.dockerconfigjson'),
+  vault_secret('docker_username', 'infra/data/ci/docker_hub', 'username'),
+  vault_secret('docker_password', 'infra/data/ci/docker_hub', 'password'),
   vault_secret('gcs_service_account_key', 'infra/data/ci/drone-plugins', 'gcp_key'),
 ]
