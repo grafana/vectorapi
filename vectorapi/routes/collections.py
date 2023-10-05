@@ -3,7 +3,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from vectorapi.exceptions import CollectionNotFound
-from vectorapi.store_client import StoreClient
+from vectorapi.pgvector.client import StoreClient
 
 router = APIRouter(
     prefix="/collections",
