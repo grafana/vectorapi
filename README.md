@@ -1,6 +1,6 @@
 # VectorAPI
 
-This Python package provides an API for sentence embeddings and managing a Vector Database powered by PostgreSQL. It utilizes the `fastapi` framework for handling HTTP requests, `pgvector`, and SQLAlchemy for Vector Database support, and relies on the `pytorch` package for embeddings computation.
+VectorAPI is a service for managing vector collections and performing vector similarity queries using a PostgreSQL vector database with the `pgvector` extension. Utilizes `fastapi` for the HTTP API, `pgvector` and SQLAlchemy for the vector database side and relies on `pytorch` for computing embeddings.
 
 ## Getting started
 
