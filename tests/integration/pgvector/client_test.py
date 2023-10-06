@@ -7,10 +7,10 @@ from sqlalchemy import Column, String, Table, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.schema import CreateTable, DropSchema
 
-import vectorapi.stores.exceptions as exception
+import vectorapi.exceptions as exception
 from vectorapi.models.client import Client
-from vectorapi.stores.pgvector.client import PGVectorClient
-from vectorapi.stores.pgvector.collection import PGVectorCollection
+from vectorapi.pgvector.client import PGVectorClient
+from vectorapi.pgvector.collection import PGVectorCollection
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection"

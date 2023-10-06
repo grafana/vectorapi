@@ -6,8 +6,8 @@ import json
 from sqlalchemy import text
 
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.stores.exceptions import CollectionPointNotFound, CollectionPointFilterError
-from vectorapi.stores.pgvector.client import PGVectorClient
+from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
+from vectorapi.pgvector.client import PGVectorClient
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
@@ -287,13 +287,13 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     async def _read_point(self, client, id):
-        stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'" # noqa: E501
+        stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'"  # noqa: E501
         async with client.engine.begin() as conn:
             result = await conn.execute(text(stmt))
             return [row for row in result.all()]
 
     async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
-        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')" # noqa: E501
+        stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')"  # noqa: E501
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))
 

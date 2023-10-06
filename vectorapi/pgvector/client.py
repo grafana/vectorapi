@@ -1,12 +1,21 @@
+from fastapi import Depends
 from loguru import logger
+from typing import Annotated
 
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
-from vectorapi.stores.exceptions import CollectionNotFound
-from vectorapi.stores.pgvector.base import Base
-from vectorapi.stores.pgvector.collection import PGVectorCollection
-from vectorapi.stores.pgvector.const import VECTORAPI_STORE_SCHEMA
-from vectorapi.stores.pgvector.db import init_db_engine
+from vectorapi.exceptions import CollectionNotFound
+from vectorapi.pgvector.base import Base
+from vectorapi.pgvector.collection import PGVectorCollection
+from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
+from vectorapi.pgvector.db import init_db_engine
+
+
+async def get_client() -> Client:
+    return PGVectorClient()
+
+
+StoreClient = Annotated[Client, Depends(get_client)]
 
 
 class PGVectorClient(Client):
