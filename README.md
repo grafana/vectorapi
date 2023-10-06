@@ -4,7 +4,7 @@ VectorAPI is a service for managing vector collections and performing vector sim
 
 ## Getting started
 
-To get started with the Vector API, run:
+To get started with the VectorAPI, run:
 
 ```sh
 make up
