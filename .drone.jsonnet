@@ -125,6 +125,9 @@ local dockerManifestPipeline = pipeline(
         },
         target: repoWithSha,
         template: '%s-OS-ARCH' % repoWithSha,
+        tags: [
+          'latest',
+        ],
         platforms: ['linux/amd64', 'linux/arm64'],
       },
     },
