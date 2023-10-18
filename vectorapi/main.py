@@ -22,7 +22,8 @@ from vectorapi import log, responses
 from vectorapi.routes.collection_points import router as collection_points_router
 from vectorapi.routes.collections import router as collections_router
 from vectorapi.routes.embeddings import router as embeddings_routers
-from vectorapi.pgvector.client import PGVectorClient
+from vectorapi.pgvector.db import engine
+from vectorapi.pgvector.base import Base
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
@@ -50,17 +51,19 @@ async def health(request: fastapi.Request):
 
 @asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
-    client = PGVectorClient()
     # executed before the application starts taking requests
-    await client.setup()
+
+    # sync the schema so we know which tables exist on boot
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.reflect)
     yield
 
     # executed after the application finishes handling requests
-    await client.teardown()
 
 
 def create_app() -> fastapi.FastAPI:
     """create_app instantiates the FastAPI app."""
+    loguru.logger.debug("Creating FastAPI app..")
     if OTEL_EXPORTER_JAEGER_ENDPOINT:
         initialize_tracing()
 
@@ -81,7 +84,6 @@ def create_app() -> fastapi.FastAPI:
     app.include_router(collections_router, prefix="/v1")
     app.include_router(collection_points_router, prefix="/v1")
     FastAPIInstrumentor.instrument_app(app)
-
     return app
 
 

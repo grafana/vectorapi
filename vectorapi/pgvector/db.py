@@ -3,14 +3,14 @@ from typing import Any, Dict
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import AdaptedConnection, Table, event, text
 from sqlalchemy.dialects.postgresql.base import PGInspector
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlalchemy.schema import CreateSchema
 
-from vectorapi.pgvector.client_settings import settings
+from vectorapi.pgvector.client_settings import Settings
 from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 
 
-def init_db_engine():
+def init_db_engine(settings: Settings) -> AsyncEngine:
     async_engine = create_async_engine(
         settings.SQLALCHEMY_DATABASE_URL.unicode_string(),
         pool_pre_ping=True,
@@ -58,9 +58,13 @@ def init_db_engine():
                     return
                 column_info["type"] = Vector(atttypmod)
 
-    bound_async_sessionmaker = async_sessionmaker(
-        bind=async_engine,
-        autoflush=False,
-        future=True,
-    )
-    return (async_engine, bound_async_sessionmaker)
+    return async_engine
+
+
+settings = Settings()
+engine = init_db_engine(settings)
+bound_async_sessionmaker = async_sessionmaker(
+    bind=engine,
+    autoflush=False,
+    future=True,
+)

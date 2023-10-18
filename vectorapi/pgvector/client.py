@@ -1,26 +1,24 @@
-from fastapi import Depends
-from loguru import logger
 from typing import Annotated
 
+from fastapi import Depends
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
+
+from vectorapi.exceptions import CollectionNotFound
 from vectorapi.models.client import Client
 from vectorapi.models.collection import Collection
-from vectorapi.exceptions import CollectionNotFound
 from vectorapi.pgvector.base import Base
 from vectorapi.pgvector.collection import PGVectorCollection
 from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
-from vectorapi.pgvector.db import init_db_engine
-
-
-async def get_client() -> Client:
-    return PGVectorClient()
-
-
-StoreClient = Annotated[Client, Depends(get_client)]
+from vectorapi.pgvector.db import bound_async_sessionmaker, engine
 
 
 class PGVectorClient(Client):
-    def __init__(self):
-        self.engine, self.bound_async_sessionmaker = init_db_engine()
+    def __init__(
+        self, engine: AsyncEngine, bound_async_sessionmaker: async_sessionmaker[AsyncSession]
+    ):
+        self.engine = engine
+        self.bound_async_sessionmaker = bound_async_sessionmaker
         self._metadata = Base.metadata
 
     async def setup(self):
@@ -95,3 +93,13 @@ class PGVectorClient(Client):
 
     def _collection_exists(self, name: str) -> bool:
         return f"{VECTORAPI_STORE_SCHEMA}.{name}" in self._metadata.tables.keys()
+
+
+client = PGVectorClient(engine, bound_async_sessionmaker)
+
+
+async def get_client() -> Client:
+    return client
+
+
+StoreClient = Annotated[Client, Depends(get_client)]

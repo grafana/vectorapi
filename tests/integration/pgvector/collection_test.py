@@ -1,13 +1,16 @@
+import json
 import os
 
 import pytest
 import pytest_asyncio
-import json
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
+from vectorapi.exceptions import CollectionPointFilterError, CollectionPointNotFound
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.pgvector.client import PGVectorClient
+from vectorapi.pgvector.client_settings import Settings
+from vectorapi.pgvector.db import init_db_engine
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
@@ -17,13 +20,22 @@ pytestmark = pytest.mark.asyncio
 
 class TestPGVectorCollection:
     @pytest_asyncio.fixture()
-    async def client(self):
-        pg_client = PGVectorClient()
-        await pg_client.setup()
+    async def engine(self) -> AsyncEngine:
+        settings = Settings()
+        return init_db_engine(settings)
+
+    @pytest_asyncio.fixture()
+    async def client(self, engine: AsyncEngine) -> PGVectorClient:
+        bound_async_sessionmaker = async_sessionmaker(
+            bind=engine,
+            autoflush=False,
+            future=True,
+        )
+        pg_client = PGVectorClient(engine, bound_async_sessionmaker)
         return pg_client
 
     @pytest.mark.integration
-    async def test_insert_point(self, client):
+    async def test_insert_point(self, client: PGVectorClient):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -37,7 +49,7 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_get_point(self, client):
+    async def test_get_point(self, client: PGVectorClient):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -60,7 +72,7 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_update_point(self, client):
+    async def test_update_point(self, client: PGVectorClient):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -79,7 +91,7 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_delete_point(self, client):
+    async def test_delete_point(self, client: PGVectorClient):
         ## Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -95,7 +107,7 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_query_point(self, client):
+    async def test_query_point(self, client: PGVectorClient):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -144,7 +156,7 @@ class TestPGVectorCollection:
         ],
     )
     async def test_query_point_with_filter(
-        self, client, filter_value, expected_ids, expected_metadata
+        self, client: PGVectorClient, filter_value, expected_ids, expected_metadata
     ):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -172,7 +184,7 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_query_point_single_value_filter_exceptions(self, client):
+    async def test_query_point_single_value_filter_exceptions(self, client: PGVectorClient):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -231,7 +243,7 @@ class TestPGVectorCollection:
         ],
     )
     async def test_query_point_logical_operators_filter(
-        self, client, filter_dict, expected_count, expected_metadata
+        self, client: PGVectorClient, filter_dict, expected_count, expected_metadata
     ):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
@@ -266,7 +278,7 @@ class TestPGVectorCollection:
         await self._cleanup_collection(client)
 
     @pytest.mark.integration
-    async def test_upsert_point(self, client):
+    async def test_upsert_point(self, client: PGVectorClient):
         # Create collection
         collection = await client.create_collection(test_collection_name, 2)
 
@@ -286,13 +298,15 @@ class TestPGVectorCollection:
         # Cleanup
         await self._cleanup_collection(client)
 
-    async def _read_point(self, client, id):
+    async def _read_point(self, client: PGVectorClient, id):
         stmt = f"SELECT id, embedding, metadata FROM {TEST_SCHEMA_NAME}.{test_collection_name} WHERE id = '{id}'"  # noqa: E501
         async with client.engine.begin() as conn:
             result = await conn.execute(text(stmt))
             return [row for row in result.all()]
 
-    async def _insert_point(self, client, id="1", embedding=[1.0, 2.0], metadata={}):
+    async def _insert_point(
+        self, client: PGVectorClient, id="1", embedding=[1.0, 2.0], metadata={}
+    ):
         stmt = f"INSERT INTO {TEST_SCHEMA_NAME}.{test_collection_name} (id, embedding, metadata) VALUES ('{id}', ARRAY{embedding}, '{json.dumps(metadata)}')"  # noqa: E501
         async with client.engine.begin() as conn:
             await conn.execute(text(stmt))

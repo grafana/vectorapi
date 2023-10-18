@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Dict, List, Type, Optional
+from typing import Any, AsyncIterator, Dict, List, Optional, Type
 
 from pgvector.sqlalchemy import Vector
 from pydantic import ConfigDict, Field
-from sqlalchemy import String, Column, cast, delete, select, text, and_, or_
+from sqlalchemy import Column, String, and_, cast, delete, or_, select, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
+from vectorapi.exceptions import CollectionPointFilterError, CollectionPointNotFound
 from vectorapi.models.collection import (
     Collection,
     CollectionPoint,
     CollectionPointResult,
 )
-from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.pgvector.base import Base
 
 
