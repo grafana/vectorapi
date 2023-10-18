@@ -52,13 +52,13 @@ async def health(request: fastapi.Request):
 @asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
     # executed before the application starts taking requests
+
+    # sync the schema so we know which tables exist on boot
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.reflect)
-    # await engine.setup()
     yield
 
     # executed after the application finishes handling requests
-    # await engine.teardown()
 
 
 def create_app() -> fastapi.FastAPI:

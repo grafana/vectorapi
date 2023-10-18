@@ -32,7 +32,6 @@ class TestPGVectorCollection:
             future=True,
         )
         pg_client = PGVectorClient(engine, bound_async_sessionmaker)
-        # await pg_client.setup()
         return pg_client
 
     @pytest.mark.integration
