@@ -104,7 +104,12 @@ local buildDockerPipeline(arch='amd64') = pipeline(
       },
     },
   ],
-);
+) + {
+  platform: {
+    arch: arch,
+    os: 'linux',
+  },
+};
 
 // Push manifest for multi-arch image.
 local dockerManifestPipeline = pipeline(
