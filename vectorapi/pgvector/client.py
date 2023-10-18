@@ -9,10 +9,13 @@ from vectorapi.pgvector.base import Base
 from vectorapi.pgvector.collection import PGVectorCollection
 from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.pgvector.db import engine, bound_async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, AsyncSession
 
 
 class PGVectorClient(Client):
-    def __init__(self, engine, bound_async_sessionmaker):
+    def __init__(
+        self, engine: AsyncEngine, bound_async_sessionmaker: async_sessionmaker[AsyncSession]
+    ):
         self.engine = engine
         self.bound_async_sessionmaker = bound_async_sessionmaker
         self._metadata = Base.metadata
