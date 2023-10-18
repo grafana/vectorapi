@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
     POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "postgres")
-    ECHO_SQL: bool = True
+    ECHO_SQL: bool = bool(os.getenv("ECHO_SQL", False))
 
     @computed_field  # type: ignore
     @property
