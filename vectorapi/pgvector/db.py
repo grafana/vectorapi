@@ -14,7 +14,7 @@ from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 def init_db_engine(settings: Settings) -> AsyncEngine:
     logger.debug("Connecting to db..")
     async_engine = create_async_engine(
-        settings.SQLALCHEMY_DATABASE_URL.unicode_string(),
+        settings.SQLALCHEMY_DATABASE_URL,
         pool_pre_ping=True,
         echo=settings.ECHO_SQL,
     )
