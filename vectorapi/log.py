@@ -118,36 +118,31 @@ def patch_logger(record: loguru.Record):
     add_trace_id(record)
 
 
+def intercept_handler(module_name: str):
+    """
+    Intercept handler for specific module.
+    """
+    # disable handlers for specific module to avoid duplicate logs
+    sub_loggers = (
+        logging.getLogger(name)
+        for name in logging.root.manager.loggerDict
+        if name.startswith(f"{module_name}.")
+    )
+    for sub_logger in sub_loggers:
+        sub_logger.handlers = []
+
+    # redirect output of module logger to loguru
+    logging.getLogger(module_name).handlers = [InterceptHandler()]
+
+
 def init_logging():
     """
     Replaces logging handlers with a handler for using the custom handler.
     """
 
     # disable handlers for specific uvicorn loggers
-    # to redirect their output to the default uvicorn logger
-    # works with uvicorn==0.11.6
-    uvicorn_loggers = (
-        logging.getLogger(name)
-        for name in logging.root.manager.loggerDict
-        if name.startswith("uvicorn.")
-    )
-    for uvicorn_logger in uvicorn_loggers:
-        uvicorn_logger.handlers = []
-
-    sqlalchemy_loggers = (
-        logging.getLogger(name)
-        for name in logging.root.manager.loggerDict
-        if name.startswith("sqlalchemy.")
-    )
-    for sqlalchemy_logger in sqlalchemy_loggers:
-        sqlalchemy_logger.handlers = []
-
-    # change handler for default uvicorn logger
-    intercept_handler = InterceptHandler()
-    logging.getLogger("uvicorn").handlers = [intercept_handler]
-
-    # change handler for default sqlalchemy logger
-    logging.getLogger("sqlalchemy").handlers = [intercept_handler]
+    intercept_handler("uvicorn")
+    intercept_handler("sqlalchemy")
 
     # set logs output, level and format
     logger.configure(
