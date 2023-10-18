@@ -1,4 +1,4 @@
-local repo = 'us.gcr.io/kubernetes-dev/vectorapi';
+local repo = 'grafana/vectorapi';
 local sha = '${DRONE_COMMIT_SHA:0:10}';
 local repoWithSha = '%s:%s' % [repo, sha];
 local pythonVersion = '3.11';
@@ -72,6 +72,7 @@ local pipeline(name, steps=[], services=[], volumes=[]) = {
   trigger+: {
     ref+: [
       'refs/heads/main',
+      'refs/heads/public-docker-image',
     ],
   },
 };
@@ -91,8 +92,11 @@ local buildDockerPipeline(arch='amd64') = pipeline(
         build_args: [
           'BUILDKIT_INLINE_CACHE=1',
         ],
-        config: {
-          from_secret: 'gcr_admin',
+        username: {
+          from_secret: 'docker_username',
+        },
+        password: {
+          from_secret: 'docker_password',
         },
         tags: [
           '${DRONE_COMMIT_SHA:0:10}-linux-%s' % arch,
@@ -100,26 +104,31 @@ local buildDockerPipeline(arch='amd64') = pipeline(
       },
     },
   ],
-);
+) + {
+  platform: {
+    arch: arch,
+    os: 'linux',
+  },
+};
 
 // Push manifest for multi-arch image.
 local dockerManifestPipeline = pipeline(
   name='docker-manifest',
   steps=[
-    {
-      name: 'manifest',
-      image: 'mplatform/manifest-tool:alpine',
-      commands: [
-        'mkdir -p ~/.docker',
-        'echo $dockerconfigjson > ~/.docker/config.json',
-        'manifest-tool push from-args --platforms linux/amd64,linux/arm64 --template %s-OS-ARCH --tags latest --target %s' % [repoWithSha, repoWithSha],
-      ],
-      environment: {
-        COMPOSE_DOCKER_CLI_BUILD: 1,
-        DOCKER_BUILDKIT: 1,
-        dockerconfigjson: {
-          from_secret: 'gcr_admin',
+    step('manifest', [], 'plugins/manifest') + {
+      settings: {
+        username: {
+          from_secret: 'docker_username',
         },
+        password: {
+          from_secret: 'docker_password',
+        },
+        target: repoWithSha,
+        template: '%s-OS-ARCH' % repoWithSha,
+        tags: [
+          'latest',
+        ],
+        platforms: ['linux/amd64', 'linux/arm64'],
       },
     },
   ],
@@ -220,5 +229,7 @@ local pythonTestsPipeline = pipeline(
   // Secrets
   vault_secret('gcr_admin', 'infra/data/ci/gcr-admin', '.dockerconfigjson'),
   vault_secret('gcr_reader', 'secret/data/common/gcr', '.dockerconfigjson'),
+  vault_secret('docker_username', 'infra/data/ci/docker_hub', 'username'),
+  vault_secret('docker_password', 'infra/data/ci/docker_hub', 'password'),
   vault_secret('gcs_service_account_key', 'infra/data/ci/drone-plugins', 'gcp_key'),
 ]
