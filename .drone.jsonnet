@@ -98,7 +98,6 @@ local buildDockerPipeline(arch='amd64') = pipeline(
         password: {
           from_secret: 'docker_password',
         },
-
         tags: [
           '${DRONE_COMMIT_SHA:0:10}-linux-%s' % arch,
         ],
@@ -111,18 +110,18 @@ local buildDockerPipeline(arch='amd64') = pipeline(
 local dockerManifestPipeline = pipeline(
   name='docker-manifest',
   steps=[
-    {
-      name: 'manifest',
-      image: 'plugins/manifest',
-      username: {
-        from_secret: 'docker_username',
+    step('manifest', [], 'plugins/manifest') + {
+      settings: {
+        username: {
+          from_secret: 'docker_username',
+        },
+        password: {
+          from_secret: 'docker_password',
+        },
+        target: repoWithSha,
+        template: '%s-OS-ARCH' % repoWithSha,
+        platforms: ['linux/amd64', 'linux/arm64'],
       },
-      password: {
-        from_secret: 'docker_password',
-      },
-      target: repoWithSha,
-      template: '%s-OS-ARCH' % repoWithSha,
-      platforms: ['linux/amd64', 'linux/arm64'],
     },
   ],
 ) + {
