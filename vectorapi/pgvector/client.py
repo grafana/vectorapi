@@ -91,8 +91,11 @@ class PGVectorClient(Client):
         return f"{VECTORAPI_STORE_SCHEMA}.{name}" in self._metadata.tables.keys()
 
 
+client = PGVectorClient(engine, bound_async_sessionmaker)
+
+
 async def get_client() -> Client:
-    return PGVectorClient(engine, bound_async_sessionmaker)
+    return client
 
 
 StoreClient = Annotated[Client, Depends(get_client)]
