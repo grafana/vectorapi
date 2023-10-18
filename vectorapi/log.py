@@ -1,6 +1,7 @@
 """Configure handlers and formats for application loggers."""
 from __future__ import annotations
 
+import inspect
 import logging
 import sys
 from pprint import pformat
@@ -123,17 +124,28 @@ def init_logging():
     # disable handlers for specific uvicorn loggers
     # to redirect their output to the default uvicorn logger
     # works with uvicorn==0.11.6
-    loggers = (
+    uvicorn_loggers = (
         logging.getLogger(name)
         for name in logging.root.manager.loggerDict
         if name.startswith("uvicorn.")
     )
-    for uvicorn_logger in loggers:
+    for uvicorn_logger in uvicorn_loggers:
         uvicorn_logger.handlers = []
+
+    sqlalchemy_loggers = (
+        logging.getLogger(name)
+        for name in logging.root.manager.loggerDict
+        if name.startswith("sqlalchemy.")
+    )
+    for sqlalchemy_logger in sqlalchemy_loggers:
+        sqlalchemy_logger.handlers = []
 
     # change handler for default uvicorn logger
     intercept_handler = InterceptHandler()
     logging.getLogger("uvicorn").handlers = [intercept_handler]
+
+    # change handler for default sqlalchemy logger
+    logging.getLogger("sqlalchemy").handlers = [intercept_handler]
 
     # set logs output, level and format
     logger.configure(
