@@ -19,12 +19,22 @@ StoreClient = Annotated[Client, Depends(get_client)]
 
 
 class PGVectorClient(Client):
-    def __init__(self):
-        self.engine, self.bound_async_sessionmaker = init_db_engine()
-        self._metadata = Base.metadata
+    _instance = None
 
     async def setup(self):
         await self.sync()
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super(PGVectorClient, cls).__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        if hasattr(self, 'initialized'):
+            return
+        self.initialized = True
+        self.engine, self.bound_async_sessionmaker = init_db_engine()
+        self._metadata = Base.metadata
 
     async def sync(self):
         async with self.engine.begin() as conn:
