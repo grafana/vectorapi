@@ -8,6 +8,7 @@ from sqlalchemy import text
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
 from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.pgvector.client import PGVectorClient
+from vectorapi.pgvector.db import engine, bound_async_sessionmaker
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"
@@ -18,8 +19,8 @@ pytestmark = pytest.mark.asyncio
 class TestPGVectorCollection:
     @pytest_asyncio.fixture()
     async def client(self):
-        pg_client = PGVectorClient()
-        await pg_client.setup()
+        pg_client = PGVectorClient(engine, bound_async_sessionmaker)
+        # await pg_client.setup()
         return pg_client
 
     @pytest.mark.integration

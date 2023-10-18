@@ -11,6 +11,7 @@ import vectorapi.exceptions as exception
 from vectorapi.models.client import Client
 from vectorapi.pgvector.client import PGVectorClient
 from vectorapi.pgvector.collection import PGVectorCollection
+from vectorapi.pgvector.db import engine, bound_async_sessionmaker
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection"
@@ -21,8 +22,8 @@ pytestmark = pytest.mark.asyncio
 class TestPGVectorClient:
     @pytest_asyncio.fixture()
     async def client(self) -> Client:
-        pg_client = PGVectorClient()
-        await pg_client.setup()
+        pg_client = PGVectorClient(engine, bound_async_sessionmaker)
+        # await pg_client.setup()
         return pg_client
 
     @pytest.mark.integration
