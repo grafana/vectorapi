@@ -59,5 +59,5 @@ if __name__ == "__main__":
     payloads = generate_payload(data)
 
     # Upsert each payload point
-    for payload in payloads:
+    for payload in tqdm(payloads):
         upsert_point(payload)
