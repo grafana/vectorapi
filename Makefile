@@ -12,7 +12,7 @@ up: build
 	docker compose up
 .PHONY: up
 
-populate-db:
+populate-db: env
 	poetry run python -m scripts.populate_db
 
 # LOCAL DEV
