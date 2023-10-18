@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from loguru import logger
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import AdaptedConnection, Table, event, text
 from sqlalchemy.dialects.postgresql.base import PGInspector
@@ -11,11 +12,14 @@ from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 
 
 def init_db_engine(settings: Settings) -> AsyncEngine:
+    logger.debug("Connecting to db..")
     async_engine = create_async_engine(
         settings.SQLALCHEMY_DATABASE_URL.unicode_string(),
         pool_pre_ping=True,
         echo=settings.ECHO_SQL,
     )
+
+    logger.debug("Registering db event listeners..")
 
     @event.listens_for(async_engine.sync_engine, "connect")
     def register_vector(dbapi_connection: AdaptedConnection, *args):
