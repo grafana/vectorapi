@@ -5,14 +5,14 @@ import pytest_asyncio
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, String, Table, text
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 from sqlalchemy.schema import CreateTable, DropSchema
 
 import vectorapi.exceptions as exception
 from vectorapi.pgvector.client import PGVectorClient
+from vectorapi.pgvector.client_settings import Settings
 from vectorapi.pgvector.collection import PGVectorCollection
 from vectorapi.pgvector.db import init_db_engine
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine
-from vectorapi.pgvector.client_settings import Settings
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection"

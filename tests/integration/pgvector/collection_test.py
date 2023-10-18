@@ -1,17 +1,16 @@
+import json
 import os
 
 import pytest
 import pytest_asyncio
-import json
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
+from vectorapi.exceptions import CollectionPointFilterError, CollectionPointNotFound
 from vectorapi.models.collection import CollectionPoint, CollectionPointResult
-from vectorapi.exceptions import CollectionPointNotFound, CollectionPointFilterError
 from vectorapi.pgvector.client import PGVectorClient
-
-from vectorapi.pgvector.db import init_db_engine
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncEngine
 from vectorapi.pgvector.client_settings import Settings
+from vectorapi.pgvector.db import init_db_engine
 
 TEST_SCHEMA_NAME = os.getenv("VECTORAPI_STORE_SCHEMA")
 test_collection_name = "test_collection_point"

@@ -19,6 +19,7 @@ class CollectionPointNotFound(Exception):
 
     ...
 
+
 class CollectionPointFilterError(Exception):
     """
     Exception raised when there is an error in the filter passed to the collection point query
