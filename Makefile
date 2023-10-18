@@ -9,13 +9,10 @@ build:
 .PHONY: build
 
 up: build
-	docker compose up -d
+	docker compose up
 .PHONY: up
 
-wait-for-db: up
-	until docker exec -it postgres pg_isready ; do sleep 2; done
-	
-populate-db: wait-for-db
+populate-db:
 	poetry run python -m scripts.populate_db
 
 # LOCAL DEV

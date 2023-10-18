@@ -1,13 +1,10 @@
-import ast
-from datasets import load_dataset
-
 import requests
 import ast
 import hashlib
+from datasets import load_dataset
 from typing import Dict, List
-
-
 from tqdm import tqdm
+
 
 COLLECTION = "test1.promql.templates"
 VECTORAPI = "http://localhost:8889/v1"
@@ -15,14 +12,16 @@ VECTORAPI = "http://localhost:8889/v1"
 
 def create_vector_collection(name: str, dimension: int) -> Dict:
     payload = {"collection_name": name, "dimension": dimension, "exist_ok": True}
-    response = requests.post(f"{VECTORAPI}/collections/create", headers={}, json=payload)
+    response = requests.post(
+        f"{VECTORAPI}/collections/create", headers={}, json=payload, timeout=10
+    )
     response.raise_for_status()
     return response.json()
 
 
 def upsert_point(payload: Dict) -> None:
     url = f"{VECTORAPI}/collections/{COLLECTION}/upsert"
-    response = requests.post(url, headers={}, json=payload)
+    response = requests.post(url, headers={}, json=payload, timeout=10)
     response.raise_for_status()
 
 
