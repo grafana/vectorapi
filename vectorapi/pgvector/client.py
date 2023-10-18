@@ -5,15 +5,13 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from vectorapi.exceptions import CollectionNotFound
-from vectorapi.models.client import Client
-from vectorapi.models.collection import Collection
 from vectorapi.pgvector.base import Base
 from vectorapi.pgvector.collection import PGVectorCollection
 from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.pgvector.db import bound_async_sessionmaker, engine
 
 
-class PGVectorClient(Client):
+class PGVectorClient:
     def __init__(
         self, engine: AsyncEngine, bound_async_sessionmaker: async_sessionmaker[AsyncSession]
     ):
@@ -28,7 +26,7 @@ class PGVectorClient(Client):
         async with self.engine.begin() as conn:
             await conn.run_sync(self._metadata.reflect)
 
-    async def create_collection(self, name: str, dimension: int) -> Collection:
+    async def create_collection(self, name: str, dimension: int) -> PGVectorCollection:
         logger.info(f"Creating collection name={name} dimension={dimension}")
         collection = PGVectorCollection(
             name=name, dimension=dimension, session_maker=self.bound_async_sessionmaker
@@ -42,7 +40,7 @@ class PGVectorClient(Client):
             raise e
         return collection
 
-    async def get_collection(self, name: str) -> Collection:
+    async def get_collection(self, name: str) -> PGVectorCollection:
         logger.info(f"Getting collection name={name}")
         try:
             if self._collection_exists(name):
@@ -59,7 +57,16 @@ class PGVectorClient(Client):
             logger.exception(e)
             raise e
 
-    def _construct_collection(self, name: str) -> Collection:
+    async def get_or_create_collection(self, name: str, dimension: int) -> PGVectorCollection:
+        try:
+            collection = await self.get_collection(name)
+            return collection
+        except CollectionNotFound:
+            return await self.create_collection(name, dimension)
+        except Exception as e:
+            raise e
+
+    def _construct_collection(self, name: str) -> PGVectorCollection:
         table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
         return PGVectorCollection(
             name=name,
@@ -98,8 +105,8 @@ class PGVectorClient(Client):
 client = PGVectorClient(engine, bound_async_sessionmaker)
 
 
-async def get_client() -> Client:
+async def get_client() -> PGVectorClient:
     return client
 
 
-StoreClient = Annotated[Client, Depends(get_client)]
+StoreClient = Annotated[PGVectorClient, Depends(get_client)]

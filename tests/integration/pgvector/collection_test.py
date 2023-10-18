@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from vectorapi.exceptions import CollectionPointFilterError, CollectionPointNotFound
-from vectorapi.models.collection import CollectionPoint, CollectionPointResult
+from vectorapi.models import CollectionPoint, CollectionPointResult
 from vectorapi.pgvector.client import PGVectorClient
 from vectorapi.pgvector.client_settings import Settings
 from vectorapi.pgvector.db import init_db_engine

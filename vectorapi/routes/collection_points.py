@@ -5,7 +5,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from vectorapi.embedder import get_embedder
-from vectorapi.models.collection import CollectionPoint
+from vectorapi.models import CollectionPoint
 from vectorapi.routes.collections import get_collection
 from vectorapi.pgvector.client import StoreClient
 
