@@ -10,6 +10,13 @@ To get started with the VectorAPI, run:
 make up
 ```
 
+To populate the local DB instance with test data from huggingface run:
+```sh
+make populate-db
+```
+
+[Grafana public datasets](https://huggingface.co/grafanalabs)
+
 ## PGVector
 
 ### Collection Operations
