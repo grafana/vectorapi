@@ -27,6 +27,3 @@ class Settings(BaseSettings):
 
     class Config:
         case_sensitive = True
-
-
-settings = Settings()

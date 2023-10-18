@@ -8,19 +8,13 @@ from vectorapi.exceptions import CollectionNotFound
 from vectorapi.pgvector.base import Base
 from vectorapi.pgvector.collection import PGVectorCollection
 from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
-from vectorapi.pgvector.db import init_db_engine
-
-
-async def get_client() -> Client:
-    return PGVectorClient()
-
-
-StoreClient = Annotated[Client, Depends(get_client)]
+from vectorapi.pgvector.db import engine, bound_async_sessionmaker
 
 
 class PGVectorClient(Client):
-    def __init__(self):
-        self.engine, self.bound_async_sessionmaker = init_db_engine()
+    def __init__(self, engine, bound_async_sessionmaker):
+        self.engine = engine
+        self.bound_async_sessionmaker = bound_async_sessionmaker
         self._metadata = Base.metadata
 
     async def setup(self):
@@ -95,3 +89,10 @@ class PGVectorClient(Client):
 
     def _collection_exists(self, name: str) -> bool:
         return f"{VECTORAPI_STORE_SCHEMA}.{name}" in self._metadata.tables.keys()
+
+
+async def get_client() -> Client:
+    return PGVectorClient(engine, bound_async_sessionmaker)
+
+
+StoreClient = Annotated[Client, Depends(get_client)]
