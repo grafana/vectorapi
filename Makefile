@@ -12,6 +12,9 @@ up: build
 	docker compose up
 .PHONY: up
 
+populate-db: env
+	poetry run python -m scripts.populate_db
+
 # LOCAL DEV
 env:
 	poetry install
