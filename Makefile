@@ -1,5 +1,3 @@
-DOCKER_TAG = vectorapi:latest
-VOLUMES = --mount type=bind,source=$(PWD),target=/app
 PORT := 8889
 .DEFAULT_GOAL := help
 
