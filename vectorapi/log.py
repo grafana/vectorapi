@@ -1,6 +1,7 @@
 """Configure handlers and formats for application loggers."""
 from __future__ import annotations
 
+import inspect
 import logging
 import sys
 from pprint import pformat
@@ -28,17 +29,19 @@ class InterceptHandler(logging.Handler):
     See https://loguru.readthedocs.io/en/stable/overview.html
     """
 
-    def emit(self, record: logging.LogRecord):
-        level = _get_log_level(record)
+    def emit(self, record: logging.LogRecord) -> None:
+        # Get corresponding Loguru level if it exists.
+        level: str | int
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
 
-        # Find caller from where originated the logged message
-        frame, depth = logging.currentframe(), 2
-        while frame.f_code.co_filename == logging.__file__:
-            if frame.f_back is not None:
-                frame = frame.f_back
-                depth += 1
-            else:
-                break
+        # Find caller from where originated the logged message.
+        frame, depth = inspect.currentframe(), 0
+        while frame and (depth == 0 or frame.f_code.co_filename == logging.__file__):
+            frame = frame.f_back
+            depth += 1
 
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
@@ -115,25 +118,31 @@ def patch_logger(record: loguru.Record):
     add_trace_id(record)
 
 
+def intercept_handler(module_name: str):
+    """
+    Intercept handler for specific module.
+    """
+    # disable handlers for specific module to avoid duplicate logs
+    sub_loggers = (
+        logging.getLogger(name)
+        for name in logging.root.manager.loggerDict
+        if name.startswith(f"{module_name}.")
+    )
+    for sub_logger in sub_loggers:
+        sub_logger.handlers = []
+
+    # redirect output of module logger to loguru
+    logging.getLogger(module_name).handlers = [InterceptHandler()]
+
+
 def init_logging():
     """
     Replaces logging handlers with a handler for using the custom handler.
     """
 
     # disable handlers for specific uvicorn loggers
-    # to redirect their output to the default uvicorn logger
-    # works with uvicorn==0.11.6
-    loggers = (
-        logging.getLogger(name)
-        for name in logging.root.manager.loggerDict
-        if name.startswith("uvicorn.")
-    )
-    for uvicorn_logger in loggers:
-        uvicorn_logger.handlers = []
-
-    # change handler for default uvicorn logger
-    intercept_handler = InterceptHandler()
-    logging.getLogger("uvicorn").handlers = [intercept_handler]
+    intercept_handler("uvicorn")
+    intercept_handler("sqlalchemy")
 
     # set logs output, level and format
     logger.configure(

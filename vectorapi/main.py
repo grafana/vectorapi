@@ -19,11 +19,11 @@ from starlette.responses import Response
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 
 from vectorapi import log, responses
+from vectorapi.pgvector.base import Base
+from vectorapi.pgvector.db import engine
 from vectorapi.routes.collection_points import router as collection_points_router
 from vectorapi.routes.collections import router as collections_router
 from vectorapi.routes.embeddings import router as embeddings_routers
-from vectorapi.pgvector.db import engine
-from vectorapi.pgvector.base import Base
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
@@ -54,6 +54,7 @@ async def lifespan(app: fastapi.FastAPI):
     # executed before the application starts taking requests
 
     # sync the schema so we know which tables exist on boot
+    loguru.logger.debug("Syncing postgres schema metadata..")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.reflect)
     yield
@@ -63,7 +64,7 @@ async def lifespan(app: fastapi.FastAPI):
 
 def create_app() -> fastapi.FastAPI:
     """create_app instantiates the FastAPI app."""
-    loguru.logger.debug("Creating FastAPI app..")
+    loguru.logger.debug("Setting up FastAPI app..")
     if OTEL_EXPORTER_JAEGER_ENDPOINT:
         initialize_tracing()
 
