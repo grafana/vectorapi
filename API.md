@@ -21,10 +21,10 @@ This request creates a collection under `vector` schema with the following colum
 
 _Response_
 
-```
+```json
 {
-    "name": "templates",
-    "dimension": 128
+  "name": "templates",
+  "dimension": 128
 }
 ```
 
@@ -32,14 +32,14 @@ _Response_
 
 Endpoint: GET http://localhost:8889/v1/collections/{collection_name}
 
-This request calls postgres and gets the collection {collection_name}.
+This request gets the collection {collection_name}.
 
 _Response_
 
-```
+```json
 {
-    "name": "templates",
-    "dimension": 128
+  "name": "templates",
+  "dimension": 128
 }
 ```
 
@@ -47,45 +47,46 @@ _Response_
 
 Endpoint: POST http://localhost:8889/v1/collections/delete
 
-This request calls postgres and deletes the collection {collection_name}.
+This request deletes the collection {collection_name}.
 
-```
+```json
 {
   "collection_name": "templates"
 }
-
 ```
 
 ### List collections (GET)
 
 Endpoint: GET http://localhost:8889/v1/collections
 
-This request calls postgres and get all collections created in the DB.
+This request get all collections created in the DB.
 
 _Response_
 
-```
+```json
 [
-    {
-        "name": "templates",
-        "dimension": 128
-    },
-    {
-        "name": "alerts",
-        "dimension": 384
-    },
+  {
+    "name": "templates",
+    "dimension": 128
+  },
+  {
+    "name": "alerts",
+    "dimension": 384
+  }
 ]
 ```
 
 ## Collection Point Operations
 
-### Insert collection point (POST)
+### Upsert collection point (POST)
 
-Endpoint: POST http://localhost:8889/v1/{collection_name}/insert
+Endpoint: POST http://localhost:8889/v1/{collection_name}/upsert
 
-This request inserts a collection point with the specified id, embedding, and optional metadata into the collection.
+This request upserts a collection point with the specified id, embedding, and optional metadata into the collection.
 
-```
+#### Upserting with an embedding input
+
+```json
 {
   "id": "point_id_1",
   "embedding": [0.1, 0.2, 0.3],
@@ -95,37 +96,36 @@ This request inserts a collection point with the specified id, embedding, and op
 }
 ```
 
-### Update a collection point (POST)
+#### Upserting from text input
 
-Endpoint: POST http://localhost:8889/v1/{collection_name}/update
+You can also upsert a collection point using text. Embeddings will be calculated on the fly using the model specified in `model_name`.
 
-This request updates the collection point with the specified id with new embedding and metadata.
-
+```json
+{
+  "id": "point_id_1",
+  "input": "foo",
+  "metadata": {
+    "key": "value"
+  },
+  "model_name": "BAAI/bge-small-en-v1.5"
+}
 ```
+
+#### Get a collection point (GET)
+
+Endpoint: GET http://localhost:8889/v1/{collection_name}/get/{id}
+
+This request retrieves the collection point with the specified id from the collection.
+
+_Response_
+
+```json
 {
   "id": "point_id_1",
   "embedding": [0.4, 0.5, 0.6],
   "metadata": {
     "new_key": "new_value"
   }
-}
-```
-
-#### Get a collection point (GET)
-
-Endpoint: GET http://localhost:8889/v1/{collection_name}/{id}
-
-This request retrieves the collection point with the specified id from the collection.
-
-_Response_
-
-```
-{
-    "id": "point_id_1",
-    "embedding": [0.4, 0.5, 0.6],
-    "metadata": {
-      "new_key": "new_value"
-    }
 }
 ```
 
@@ -137,20 +137,23 @@ This request deletes the collection point with the specified id from the collect
 
 ### Query collection points (POST)
 
-Endpoint: POST http://localhost:8889/v1/collection-points/query
+Endpoint: POST http://localhost:8889/v1/{collection_name}/query
 
-This request performs a query on the collection points, searching for points similar to the given query vector. You can specify additional parameters like `limit` and `filter` for filtering results.
+This request performs a query on the collection points, searching for points similar to the given query vector. You can specify additional parameters:
 
-```
+- `top_k`: the number of results to return (default: 10)
+- `filter`: search filters to apply on the metadata
+
+```json
 {
   "query": [0.7, 0.8, 0.9],
-  "limit": 10
+  "top_k": 10
 }
 ```
 
 _Response_
 
-```
+```json
 [
   {
     "id": "point_id_1",
@@ -158,7 +161,7 @@ _Response_
     "metadata": {
       "key": "new_value"
     },
-    "cosine_similarity": 0.95
+    "score": 0.95
   },
   {
     "id": "point_id_2",
@@ -166,34 +169,32 @@ _Response_
     "metadata": {
       "key": "value"
     },
-    "cosine_similarity": 0.92
+    "score": 0.92
   }
 ]
 ```
 
-### Query collection points with advanced filtering (POST)
+#### Query collection points with advanced filtering (POST)
 
 Endpoint: POST http://localhost:8889/v1/collection-points/query
 
 #### Example 1
 
-```
+```json
 {
-  "query":  [0.4, 0.5, 0.6],
+  "query": [0.4, 0.5, 0.6],
   "top_k": 1,
-  "filter":
-    {
-      "key":
-        {
-          "$eq": "value"
-        }
-    },
+  "filter": {
+    "key": {
+      "$eq": "value"
+    }
+  }
 }
 ```
 
 _Response_
 
-```
+```json
 [
   {
     "id": "point_id_2",
@@ -201,7 +202,7 @@ _Response_
     "metadata": {
       "key": "value"
     },
-    "cosine_similarity": 0.92
+    "score": 0.92
   }
 ]
 ```
@@ -211,9 +212,9 @@ The API will return the `top_k` (if available) closest points that match the fil
 
 #### Example 2
 
-```
+```json
 {
-  "query":  [0.4, 0.5, 0.6],
+  "query": [0.4, 0.5, 0.6],
   "top_k": 10,
   "filter": {
     "$or": [
@@ -228,13 +229,13 @@ The API will return the `top_k` (if available) closest points that match the fil
         }
       }
     ]
-  },
+  }
 }
 ```
 
 _Response_
 
-```
+```json
 [
   {
     "id": "point_id_1",
@@ -242,7 +243,7 @@ _Response_
     "metadata": {
       "key": "new_value"
     },
-    "cosine_similarity": 0.95
+    "score": 0.95
   },
   {
     "id": "point_id_2",
@@ -250,7 +251,7 @@ _Response_
     "metadata": {
       "key": "value"
     },
-    "cosine_similarity": 0.92
+    "score": 0.92
   }
 ]
 ```
@@ -267,6 +268,46 @@ Supported multiple values filter operators are:
 - `$or`
 - `$and`
 
+### Search collection points (POST)
+
+Endpoint: POST http://localhost:8889/v1/{collection_name}/search
+
+This request performs a search on the collection points, searching for points similar to the given input text. It it similar to the /query endpoint which takes a vector input, whereas the /search endpoint takes a text input (and does the embedding on the fly).
+
+- `top_k`: the number of results to return (default: 10)
+- `top_k`: the number of results to return (default: 10)
+- `filter`: search filters to apply on the metadata
+
+```json
+{
+  "input": "foo",
+  "top_k": 10
+}
+```
+
+_Response_
+
+```json
+[
+  {
+    "id": "point_id_1",
+    "embedding": [0.4, 0.5, 0.6],
+    "metadata": {
+      "key": "new_value"
+    },
+    "score": 0.95
+  },
+  {
+    "id": "point_id_2",
+    "embedding": [0.5, 0.6, 0.7],
+    "metadata": {
+      "key": "value"
+    },
+    "score": 0.92
+  }
+]
+```
+
 ## Embeddings
 
 ### Calculate Embeddings
@@ -282,7 +323,7 @@ Endpoint: POST http://localhost:8889/v1/embeddings
 
 _Response_
 
-```
+```json
 {
     "index": 0,
     "object": "embedding",
