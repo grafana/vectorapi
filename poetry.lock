@@ -1689,6 +1689,26 @@ instruments = ["asgiref (>=3.0,<4.0)"]
 test = ["opentelemetry-instrumentation-asgi[instruments]", "opentelemetry-test-utils (==0.41b0)"]
 
 [[package]]
+name = "opentelemetry-instrumentation-asyncpg"
+version = "0.41b0"
+description = "OpenTelemetry instrumentation for AsyncPG"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "opentelemetry_instrumentation_asyncpg-0.41b0-py3-none-any.whl", hash = "sha256:977fd290f9d24fd6e7a0c330c08738075749a398d87b5eb2421bace90a76e29c"},
+    {file = "opentelemetry_instrumentation_asyncpg-0.41b0.tar.gz", hash = "sha256:2aa1a70bfe7f448b1c71243b8e19e52c869e70aefd7b742ca7547a77abc35e58"},
+]
+
+[package.dependencies]
+opentelemetry-api = ">=1.12,<2.0"
+opentelemetry-instrumentation = "0.41b0"
+opentelemetry-semantic-conventions = "0.41b0"
+
+[package.extras]
+instruments = ["asyncpg (>=0.12.0)"]
+test = ["opentelemetry-instrumentation-asyncpg[instruments]", "opentelemetry-test-utils (==0.41b0)"]
+
+[[package]]
 name = "opentelemetry-instrumentation-fastapi"
 version = "0.41b0"
 description = "OpenTelemetry FastAPI Instrumentation"
@@ -1709,6 +1729,28 @@ opentelemetry-util-http = "0.41b0"
 [package.extras]
 instruments = ["fastapi (>=0.58,<1.0)"]
 test = ["httpx (>=0.22,<1.0)", "opentelemetry-instrumentation-fastapi[instruments]", "opentelemetry-test-utils (==0.41b0)", "requests (>=2.23,<3.0)"]
+
+[[package]]
+name = "opentelemetry-instrumentation-sqlalchemy"
+version = "0.41b0"
+description = "OpenTelemetry SQLAlchemy instrumentation"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "opentelemetry_instrumentation_sqlalchemy-0.41b0-py3-none-any.whl", hash = "sha256:67f113b995e9a5b031268559e57a5f81d4619868ba82cd1ca2a76a82f42b1fb9"},
+    {file = "opentelemetry_instrumentation_sqlalchemy-0.41b0.tar.gz", hash = "sha256:b98b6dbf629faabaa8c0a7a33c202754384b960c9c8d2b5fe248f11857eabc89"},
+]
+
+[package.dependencies]
+opentelemetry-api = ">=1.12,<2.0"
+opentelemetry-instrumentation = "0.41b0"
+opentelemetry-semantic-conventions = "0.41b0"
+packaging = ">=21.0"
+wrapt = ">=1.11.2"
+
+[package.extras]
+instruments = ["sqlalchemy"]
+test = ["opentelemetry-instrumentation-sqlalchemy[instruments]", "opentelemetry-sdk (>=1.12,<2.0)", "pytest"]
 
 [[package]]
 name = "opentelemetry-propagator-jaeger"
@@ -4096,4 +4138,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "40db12291f699ebc009f8bf450e09b58f5a833934d46ee6858d27074d029526f"
+content-hash = "ec975f1d446deb1eaf813902b0430f06893ce97b1111bef48567febfeba5d81a"

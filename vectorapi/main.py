@@ -9,7 +9,9 @@ import uvloop
 from fastapi_route_logger_middleware import RouteLoggerMiddleware
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.jaeger import JaegerPropagator
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -37,6 +39,8 @@ def initialize_tracing() -> None:
     otlp_exporter = OTLPSpanExporter()
 
     tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+    AsyncPGInstrumentor().instrument()
+    SQLAlchemyInstrumentor().instrument()
 
 
 async def health(request: fastapi.Request):
