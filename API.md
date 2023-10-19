@@ -6,13 +6,13 @@
 
 Endpoint: POST http://localhost:8889/v1/collections/create
 
-This request calls postgres and creates a collection under `vector` schema with the following columns.
+This request creates a collection under `vector` schema with the following columns.
 
 - id: string
 - embedding: a list of floats with the dimension specified in the request.
 - metadata: JSON metadata column
 
-```
+```json
 {
   "collection_name": "templates",
   "dimension": 128
