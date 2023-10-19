@@ -8,7 +8,7 @@ import uvicorn
 import uvloop
 from fastapi_route_logger_middleware import RouteLoggerMiddleware
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import thrift
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.propagators.jaeger import JaegerPropagator
@@ -31,13 +31,12 @@ OTEL_EXPORTER_JAEGER_ENDPOINT = os.getenv("OTEL_EXPORTER_JAEGER_ENDPOINT")
 
 
 def initialize_tracing() -> None:
-    """initialize_tracing configures the OpenTelemetry Jaeger exporter."""
     set_global_textmap(JaegerPropagator())
     tracer_provider = TracerProvider(resource=Resource.create({SERVICE_NAME: APP_NAME}))
     trace.set_tracer_provider(tracer_provider)
-    jaeger_exporter = thrift.JaegerExporter()
+    otlp_exporter = OTLPSpanExporter()
 
-    tracer_provider.add_span_processor(BatchSpanProcessor(jaeger_exporter))
+    tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
 
 
 async def health(request: fastapi.Request):
