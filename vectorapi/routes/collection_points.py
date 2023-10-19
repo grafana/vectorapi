@@ -1,18 +1,25 @@
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Response, status
 from loguru import logger
 from pydantic import BaseModel
 
 from vectorapi.embedder import get_embedder
-from vectorapi.models import CollectionPoint
-from vectorapi.routes.collections import get_collection
 from vectorapi.pgvector.client import StoreClient
+from vectorapi.routes.collections import get_collection
 
 router = APIRouter(
     prefix="/collections",
     tags=["points"],
 )
+
+
+class CollectionPointRequest(BaseModel):
+    id: str
+    input: Optional[str] = None
+    embedding: Optional[List[float]] = None
+    metadata: Dict[str, Any] = {}
+    model_name: str = "BAAI/bge-small-en-v1.5"
 
 
 @router.post(
@@ -21,11 +28,35 @@ router = APIRouter(
 )
 async def upsert_point(
     collection_name: str,
-    request: CollectionPoint,
+    request: CollectionPointRequest,
     client: StoreClient,
 ):
     """Create a new collection with the given name and dimension."""
     collection = await get_collection(collection_name, client)
+
+    if request.embedding is None and request.input is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Must provide either embedding or input",
+        )
+    elif request.embedding is None:
+        try:
+            embedder = get_embedder(model_name=request.model_name)
+        except Exception as e:
+            logger.exception(e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error getting embedder: {e}",
+            )
+
+        try:
+            request.embedding = embedder.encode(request.input).tolist()
+        except Exception as e:
+            logger.exception(e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error encoding text: {e}",
+            )
 
     logger.debug(f"Upserting point {request.id}")
     try:
