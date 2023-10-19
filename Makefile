@@ -26,7 +26,7 @@ api: env
 
 docs: env
 	mkdir -p ./docs
-	poetry run python -m scripts.generate_apidoc > ./docs/apidocs.html
+	poetry run python -m scripts.generate_apidoc > ./docs/index.html
 	poetry run python -m scripts.generate_openapijson > ./docs/openapi.json
 .PHONY: docs
 
