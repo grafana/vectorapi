@@ -44,8 +44,8 @@ static-analysis:
 	mypy .
 .PHONY: static-analysis
 
-test:
-	python -m pytest -v
+test: env
+	poetry run python -m pytest -v
 .PHONY: test
 
 test-integration:
