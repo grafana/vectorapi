@@ -2,11 +2,14 @@
 
 ## Collection Operations
 
+A collection represents a set of vectors with metadata, which can be queried and searched.
+In postgres, they're are stored as tables under the schema defined by the `VECTORAPI_STORE_SCHEMA` environment variable (default: `vector`).
+
 ### Create a collection (POST)
 
 Endpoint: POST http://localhost:8889/v1/collections/create
 
-This request creates a collection under `vector` schema with the following columns.
+Create a collection under `vector` schema with the following columns.
 
 - id: string
 - embedding: a list of floats with the dimension specified in the request.
@@ -32,7 +35,7 @@ _Response_
 
 Endpoint: GET http://localhost:8889/v1/collections/{collection_name}
 
-This request gets the collection {collection_name}.
+Get the collection {collection_name}.
 
 _Response_
 
@@ -47,7 +50,7 @@ _Response_
 
 Endpoint: POST http://localhost:8889/v1/collections/delete
 
-This request deletes the collection {collection_name}.
+Delete the collection {collection_name}.
 
 ```json
 {
@@ -59,7 +62,7 @@ This request deletes the collection {collection_name}.
 
 Endpoint: GET http://localhost:8889/v1/collections
 
-This request get all collections created in the DB.
+Get all collections that are present in the DB.
 
 _Response_
 
@@ -82,7 +85,7 @@ _Response_
 
 Endpoint: POST http://localhost:8889/v1/{collection_name}/upsert
 
-This request upserts a collection point with the specified id, embedding, and optional metadata into the collection.
+Upsert a collection point with the specified id, embedding, and optional metadata into the collection.
 
 #### Upserting with an embedding input
 
@@ -98,7 +101,7 @@ This request upserts a collection point with the specified id, embedding, and op
 
 #### Upserting from text input
 
-You can also upsert a collection point using text. Embeddings will be calculated on the fly using the model specified in `model_name`.
+Upsert a collection point using text. Embeddings will be calculated on the fly using the model specified in `model_name`.
 
 ```json
 {
@@ -115,7 +118,7 @@ You can also upsert a collection point using text. Embeddings will be calculated
 
 Endpoint: GET http://localhost:8889/v1/{collection_name}/get/{id}
 
-This request retrieves the collection point with the specified id from the collection.
+Retrieve the collection point with the specified id from the collection.
 
 _Response_
 
@@ -133,13 +136,13 @@ _Response_
 
 Endpoint: DELETE http://localhost:8889/v1/{collection_name}/delete/{id}
 
-This request deletes the collection point with the specified id from the collection.
+Delete the collection point with the specified id from the collection.
 
 ### Query collection points (POST)
 
 Endpoint: POST http://localhost:8889/v1/{collection_name}/query
 
-This request performs a query on the collection points, searching for points similar to the given query vector. You can specify additional parameters:
+Query the collection points, searching for points similar to the given query vector. You can specify additional parameters:
 
 - `top_k`: the number of results to return (default: 10)
 - `filter`: search filters to apply on the metadata
@@ -272,7 +275,7 @@ Supported multiple values filter operators are:
 
 Endpoint: POST http://localhost:8889/v1/{collection_name}/search
 
-This request performs a search on the collection points, searching for points similar to the given input text. It it similar to the /query endpoint which takes a vector input, whereas the /search endpoint takes a text input (and does the embedding on the fly).
+Search the collection points, searching for points similar to the given input text. It it similar to the /query endpoint which takes a vector input, whereas the /search endpoint takes a text input (and does the embedding on the fly).
 
 - `top_k`: the number of results to return (default: 10)
 - `top_k`: the number of results to return (default: 10)
