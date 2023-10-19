@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, AsyncIterator, Dict, List, Optional, Type
 
 from pgvector.sqlalchemy import Vector
-from pydantic import ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Column, String, and_, cast, delete, or_, select, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -11,11 +11,7 @@ from sqlalchemy.ext.declarative import AbstractConcreteBase
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
 from vectorapi.exceptions import CollectionPointFilterError, CollectionPointNotFound
-from vectorapi.models.collection import (
-    Collection,
-    CollectionPoint,
-    CollectionPointResult,
-)
+from vectorapi.models import CollectionPoint, CollectionPointResult
 from vectorapi.pgvector.base import Base
 
 
@@ -86,7 +82,9 @@ class CollectionTable(AbstractConcreteBase, Base):
         await session.commit()
 
 
-class PGVectorCollection(Collection):
+class PGVectorCollection(BaseModel):
+    name: str
+    dimension: int
     session_maker: async_sessionmaker[AsyncSession] = Field(..., exclude=True)
     table: Type[CollectionTable] | None = Field(default=None, exclude=True)
 
@@ -225,6 +223,9 @@ class PGVectorCollection(Collection):
             return operation != value
 
         raise CollectionPointFilterError(f"Unsupported operator {operator}")
+
+    def __repr__(self):
+        return f"Collection(name={self.name}, dimension={self.dimension})"
 
 
 def is_duplicate_key_error(error_message):
