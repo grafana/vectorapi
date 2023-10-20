@@ -7,45 +7,45 @@ readme = "README.md"
 include = ["README.md"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
-fastapi = "0.103.0"
-fastapi-route-logger-middleware = "^0.2.3"
-loguru = "^0.7.0"
-opentelemetry-api = "^1.19.0"
-opentelemetry-exporter-jaeger-thrift = "^1.19.0"
-opentelemetry-instrumentation-fastapi = "^0.40b0"
-opentelemetry-propagator-jaeger = "^1.19.0"
-opentelemetry-sdk = "^1.19.0"
-orjson = "^3.9.5"
-sentence-transformers = "^2.2.2"
-starlette-exporter = "^0.16.0"
-uvicorn = { extras = ["standard"], version = "^0.23.2" }
-pgvector = "^0.2.1"
-asyncpg = "^0.28.0"
-pydantic-settings = "^2.0.3"
-sqlalchemy = { extras = ["asyncio"], version = "^2.0.20" }
+python = ">=3.10,<3.13"
+asyncpg = "0.28.0"
+datasets = "2.14.5"
+fastapi = "0.104.0"
+fastapi-route-logger-middleware = "0.2.3"
+loguru = "0.7.2"
+opentelemetry-api = "1.20.0"
+opentelemetry-exporter-jaeger-thrift = "1.20.0"
+opentelemetry-instrumentation-fastapi = "0.41b0"
+opentelemetry-propagator-jaeger = "1.20.0"
+opentelemetry-sdk = "1.20.0"
+orjson = "3.9.9"
+pgvector = "0.2.3"
+pydantic-settings = "2.0.3"
+sentence-transformers = "2.2.2"
+sqlalchemy = { extras = ["asyncio"], version = "2.0.22" }
+starlette-exporter = "0.16.0"
+uvicorn = { extras = ["standard"], version = "0.23.2" }
 # force torch cpu install
 torch = [
-    { markers = "sys_platform == 'linux' and platform_machine == 'x86_64'", source = "pytorch-cpu", version = "2.0.1+cpu" },
-    { markers = "sys_platform == 'linux' and platform_machine == 'aarch64'", url = "https://download.pytorch.org/whl/torch-2.0.1-cp311-cp311-manylinux2014_aarch64.whl" },
-    { markers = "sys_platform == 'darwin' and platform_machine == 'arm64'", url = "https://download.pytorch.org/whl/cpu/torch-2.0.1-cp311-none-macosx_11_0_arm64.whl" },
-    { markers = "(sys_platform == 'linux' and (platform_machine != 'x86_64' and platform_machine != 'aarch64')) or (sys_platform == 'darwin' and platform_machine != 'arm64')", version = "2.0.1" },
+    { markers = "sys_platform == 'linux' and platform_machine == 'x86_64'", source = "pytorch-cpu", version = "2.1.0+cpu" },
+    { markers = "sys_platform == 'linux' and platform_machine == 'aarch64'", url = "https://download.pytorch.org/whl/cpu/torch-2.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl" },
+    { markers = "sys_platform == 'darwin' and platform_machine == 'arm64'", url = "https://download.pytorch.org/whl/cpu/torch-2.1.0-cp311-none-macosx_11_0_arm64.whl" },
+    { markers = "(sys_platform == 'linux' and (platform_machine != 'x86_64' and platform_machine != 'aarch64')) or (sys_platform == 'darwin' and platform_machine != 'arm64')", version = "2.1.0" },
 ]
-datasets = "^2.14.5"
 
 [tool.poetry.group.dev.dependencies]
-black = "23.7.0"
-coverage = "7.3.0"
+black = "23.10.0"
+coverage = "7.3.2"
 flake8 = "6.1.0"
-httpx = "0.24.1"
-mypy = "1.5.1"
-pytest = "7.4.0"
+httpx = "0.25.0"
+mypy = "1.6.1"
+pytest = "7.4.2"
 pytest-asyncio = "0.21.1"
 pytest-benchmark = "4.0.0"
-ruff = "0.0.286"
+pytest-httpx = "0.26.0"
+ruff = "0.1.0"
 types-orjson = "3.6.2"
-types-redis = "4.6.0.5"
-pytest-httpx = "^0.23.1"
+types-redis = "4.6.0.7"
 
 [[tool.poetry.source]]
 name = "pytorch-cpu"
@@ -81,6 +81,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-markers = [
-    "Integration: marks tests as integration tests",
-]
+markers = ["Integration: marks tests as integration tests"]
