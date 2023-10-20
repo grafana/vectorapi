@@ -8,7 +8,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>My Project - ReDoc</title>
+    <title>Grafana VectorAPI docs</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
