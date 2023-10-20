@@ -149,7 +149,6 @@ local poetryWorkspaceHome = {
   POSTGRES_PORT: 5432,
   POSTGRES_DB: 'postgres',
   VECTORAPI_STORE_SCHEMA: 'test_schema',
-  VECTORAPI_STORE_CLIENT: 'pgvector',
 };
 
 local python_poetry_test_steps(depends_on=[]) =

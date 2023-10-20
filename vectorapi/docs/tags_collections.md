@@ -1,0 +1,1 @@
+A collection represents a set of vectors with metadata, which can be queried and searched. In postgres, they're are stored as tables under the schema defined by the `VECTORAPI_STORE_SCHEMA` environment variable (default: `vectorapi`).
