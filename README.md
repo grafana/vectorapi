@@ -28,7 +28,7 @@ make populate-db
 
 ## Making requests
 
-See [API docs](./API.md) for more details.
+See [API docs](https://grafana.github.io/vectorapi/) for more details.
 
 ### Embedding text
 
