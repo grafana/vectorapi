@@ -19,6 +19,7 @@ from starlette.responses import Response
 from starlette_exporter import PrometheusMiddleware, handle_metrics
 
 from vectorapi import log, responses
+from vectorapi.docs import OPENAPI_DESCRIPTION, OPENAPI_TAGS_METADATA
 from vectorapi.pgvector.base import Base
 from vectorapi.pgvector.db import engine
 from vectorapi.routes.collection_points import router as collection_points_router
@@ -68,7 +69,13 @@ def create_app() -> fastapi.FastAPI:
     if OTEL_EXPORTER_JAEGER_ENDPOINT:
         initialize_tracing()
 
-    app = fastapi.FastAPI(default_response_class=responses.ORJSONResponse, lifespan=lifespan)
+    app = fastapi.FastAPI(
+        title="VectorAPI",
+        description=OPENAPI_DESCRIPTION,
+        openapi_tags=OPENAPI_TAGS_METADATA,
+        default_response_class=responses.ORJSONResponse,
+        lifespan=lifespan,
+    )
     logger = loguru.logger.patch(log.add_trace_id)
     app.add_middleware(RouteLoggerMiddleware, logger=logger)
     app.add_middleware(
