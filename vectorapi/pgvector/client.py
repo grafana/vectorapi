@@ -4,10 +4,10 @@ from fastapi import Depends
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
+from vectorapi.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.exceptions import CollectionNotFound
 from vectorapi.pgvector.base import Base
 from vectorapi.pgvector.collection import PGVectorCollection
-from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
 from vectorapi.pgvector.db import bound_async_sessionmaker, engine
 
 
