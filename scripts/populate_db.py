@@ -28,9 +28,8 @@ def load_and_format_dataset() -> List[Dict]:
     # Load dataset from HuggingFace
     dataset = load_dataset(
         "grafanalabs/promql-templates",
-        data_files="promql-templates-bge-small-embeddings.parquet",
     )
-    return dataset['train']
+    return dataset["train"]
 
 
 def generate_payload(data: List[Dict]) -> List[Dict]:
