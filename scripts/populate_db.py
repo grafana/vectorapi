@@ -50,6 +50,7 @@ def generate_payload(data: List[Dict]) -> List[Dict]:
 
 
 if __name__ == "__main__":
+    print("Loading dataset from HuggingFace...")
     data = load_and_format_dataset()
 
     # Create vector collection
@@ -59,5 +60,7 @@ if __name__ == "__main__":
     payloads = generate_payload(data)
 
     # Upsert each payload point
+    print("Upserting points...")
     for payload in tqdm(payloads):
         upsert_point(payload)
+    print("Done!")
