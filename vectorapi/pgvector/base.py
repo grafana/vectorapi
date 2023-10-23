@@ -1,7 +1,7 @@
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
-from vectorapi.pgvector.const import VECTORAPI_STORE_SCHEMA
+from vectorapi.const import VECTORAPI_STORE_SCHEMA
 
 convention = {
     "ix": "ix_%(column_0_label)s",

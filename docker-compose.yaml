@@ -24,6 +24,7 @@ services:
       - ./docs:/app/docs
       - ./.sentence_transformers:/app/.sentence_transformers
     environment:
+      DEFAULT_EMBEDDING_MODEL: BAAI/bge-small-en-v1.5
       POSTGRES_HOST: db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword

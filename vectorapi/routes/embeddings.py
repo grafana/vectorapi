@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
+from vectorapi.const import DEFAULT_EMBEDDING_MODEL
 from vectorapi.embedder import get_embedder
 from vectorapi.responses import ORJSONResponse
 
@@ -39,7 +40,7 @@ class EmbeddingResponse(BaseModelCamel):
 
 
 class EmbeddingRequest(BaseModelCamel):
-    model: str = "BAAI/bge-small-en-v1.5"
+    model: str = DEFAULT_EMBEDDING_MODEL
     input: str
     user: str | None = None
 
@@ -71,7 +72,7 @@ async def create_embeddings(request: EmbeddingRequest):
 
 
 class SimilarityRequest(BaseModelCamel):
-    model: str = "BAAI/bge-small-en-v1.5"
+    model: str = DEFAULT_EMBEDDING_MODEL
     source_sentence: str
     sentences: List[str]
 

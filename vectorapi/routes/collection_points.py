@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Response, status
 from loguru import logger
 from pydantic import BaseModel
 
+from vectorapi.const import DEFAULT_EMBEDDING_MODEL
 from vectorapi.embedder import get_embedder
 from vectorapi.pgvector.client import StoreClient
 from vectorapi.routes.collections import get_collection
@@ -19,7 +20,7 @@ class CollectionPointRequest(BaseModel):
     input: Optional[str] = None
     embedding: Optional[List[float]] = None
     metadata: Dict[str, Any] = {}
-    model_name: str = "BAAI/bge-small-en-v1.5"
+    model: str = DEFAULT_EMBEDDING_MODEL
 
 
 @router.post(
@@ -41,7 +42,7 @@ async def upsert_point(
         )
     elif request.embedding is None:
         try:
-            embedder = get_embedder(model_name=request.model_name)
+            embedder = get_embedder(model_name=request.model)
         except Exception as e:
             logger.exception(e)
             raise HTTPException(
@@ -151,7 +152,7 @@ class SearchPointRequest(BaseModel):
     input: str
     filter: Optional[Dict[str, Any]] = None
     top_k: int = 10
-    model_name: str = "BAAI/bge-small-en-v1.5"
+    model: str = DEFAULT_EMBEDDING_MODEL
 
 
 @router.post(
@@ -167,7 +168,7 @@ async def search(
     collection = await get_collection(collection_name, client)
 
     try:
-        embedder = get_embedder(model_name=request.model_name)
+        embedder = get_embedder(model_name=request.model)
     except Exception as e:
         logger.exception(e)
         raise HTTPException(

@@ -7,6 +7,8 @@ import torch
 from numpy.typing import NDArray
 from sentence_transformers import SentenceTransformer
 
+from vectorapi.const import DEFAULT_EMBEDDING_MODEL
+
 
 def get_torch_device() -> str:
     return (
@@ -21,7 +23,7 @@ def get_torch_device() -> str:
 class Embedder:
     def __init__(
         self,
-        model_name: str = "BAAI/bge-small-en-v1.5",
+        model_name: str = DEFAULT_EMBEDDING_MODEL,
         batch_size: int = 32,
         device: str = get_torch_device(),
         normalize_embeddings: bool = True,
