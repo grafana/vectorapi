@@ -25,17 +25,19 @@ def upsert_point(payload: Dict) -> None:
 
 
 def load_and_format_dataset() -> List[Dict]:
-    # Load dataset from HuggingFace
+    # Load dataset with embeddings from HuggingFace
     dataset = load_dataset(
         "grafanalabs/promql-templates",
+        data_files="promql-templates-bge-small-en-embeddings.parquet",
+        split="train",
     )
-    return dataset["train"]
+    return dataset
 
 
 def generate_payload(data: List[Dict]) -> List[Dict]:
     return [
         {
-            "id": hashlib.sha256(row["promql"].encode("utf-8")).hexdigest(),
+            "id": hashlib.md5(row["promql"].encode("utf-8")).hexdigest(),
             "embedding": row["embedding"],
             "metadata": {
                 "promql": row["promql"],
