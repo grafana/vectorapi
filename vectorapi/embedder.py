@@ -1,3 +1,5 @@
+import requests
+
 from functools import lru_cache
 from typing import List
 
@@ -29,11 +31,18 @@ class Embedder:
         normalize_embeddings: bool = True,
     ):
         self.model_name = model_name
-        self.model = SentenceTransformer(model_name)
+        self.model = None
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
         self.dimension: int = self.model.get_sentence_embedding_dimension()
+
+    def load_model(self, model_name: str) -> bool:
+        try:
+            self.model = SentenceTransformer(model_name)
+        except requests.exceptions.HTTPError as e:
+            raise ValueError(f"Model {model_name} not found") from e
+        return True
 
     @property
     def _trace_attributes(self):
@@ -69,4 +78,6 @@ class Embedder:
 
 @lru_cache(maxsize=3)
 def get_embedder(model_name: str) -> Embedder:
-    return Embedder(model_name=model_name)
+    emb = Embedder(model_name=model_name)
+    emb.load_model(model_name)
+    return emb

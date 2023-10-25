@@ -55,14 +55,20 @@ async def create_embeddings(request: EmbeddingRequest):
     """
     Create embeddings for a given text.
     """
-    embedder = get_embedder(model_name=request.model)
+
     try:
+        embedder = get_embedder(model_name=request.model)
         vector: NDArray[np.float_] = embedder.encode(request.input)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid model name {request.model} please use a SentenceTransformer compatible model (e.g. DEFAULT_EMBEDDING_MODEL)",
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error encoding text: {e}",
-        )
+        ) from e
     data = [EmbeddingResponseData(index=0, embedding=vector.tolist())]
     return EmbeddingResponse(
         data=data,
@@ -87,15 +93,19 @@ async def similarity(request: SimilarityRequest):
     """
     Calculate similarity between two inputs
     """
-    embedder = get_embedder(model_name=request.model)
-
     try:
+        embedder = get_embedder(model_name=request.model)
         similarity_scores = embedder.generate_similarity(request.source_sentence, request.sentences)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid model name {request.model} please use a SentenceTransformer compatible model (e.g. DEFAULT_EMBEDDING_MODEL)",
+        ) from e
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error calculating similarity: {e}",
-        )
+        ) from e
 
     return similarity_scores

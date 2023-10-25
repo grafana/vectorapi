@@ -43,15 +43,12 @@ async def upsert_point(
     elif request.embedding is None:
         try:
             embedder = get_embedder(model_name=request.model)
-        except Exception as e:
-            logger.exception(e)
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error getting embedder: {e}",
-            )
-
-        try:
             request.embedding = embedder.encode(request.input).tolist()
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid model name {request.model} please use a SentenceTransformer compatible model (e.g. DEFAULT_EMBEDDING_MODEL)",
+            ) from e
         except Exception as e:
             logger.exception(e)
             raise HTTPException(
@@ -169,6 +166,11 @@ async def search(
 
     try:
         embedder = get_embedder(model_name=request.model)
+    except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid model name {request.model} please use a SentenceTransformer compatible model (e.g. DEFAULT_EMBEDDING_MODEL)",
+            ) from e
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
