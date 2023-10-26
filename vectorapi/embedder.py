@@ -35,11 +35,12 @@ class Embedder:
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
-        self.dimension: int = self.model.get_sentence_embedding_dimension()
+        self.dimension: int = 0
 
     def load_model(self, model_name: str) -> None:
         try:
             self.model = SentenceTransformer(model_name)
+            self.dimension: int = self.model.get_sentence_embedding_dimension()
         except requests.exceptions.HTTPError as e:
             # huggingface throws "401 Client Error" when a model doesn't exist
             if "401 Client Error" in e.response.text:
