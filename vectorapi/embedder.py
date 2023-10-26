@@ -37,12 +37,14 @@ class Embedder:
         self.normalize_embeddings = normalize_embeddings
         self.dimension: int = self.model.get_sentence_embedding_dimension()
 
-    def load_model(self, model_name: str) -> bool:
+    def load_model(self, model_name: str) -> None:
         try:
             self.model = SentenceTransformer(model_name)
         except requests.exceptions.HTTPError as e:
-            raise ValueError(f"Model {model_name} not found") from e
-        return True
+            # huggingface throws "401 Client Error" when a model doesn't exist
+            if "401 Client Error" in e.response.text:
+                raise ValueError(f"Model {model_name} not found") from e
+            raise e
 
     @property
     def _trace_attributes(self):
