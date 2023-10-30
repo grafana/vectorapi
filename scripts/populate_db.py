@@ -5,7 +5,7 @@ from typing import Dict, List
 from tqdm import tqdm
 
 
-COLLECTION = "test1.promql.templates"
+COLLECTION = "grafana.promql.templates"
 VECTORAPI = "http://localhost:8889/v1"
 
 
