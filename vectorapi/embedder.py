@@ -4,10 +4,13 @@ from typing import List
 import numpy as np
 import opentelemetry.trace
 import torch
+from huggingface_hub.utils._errors import RepositoryNotFoundError
+from loguru import logger
 from numpy.typing import NDArray
 from sentence_transformers import SentenceTransformer
 
 from vectorapi.const import DEFAULT_EMBEDDING_MODEL
+from vectorapi.exceptions import EmbedderModelNotFound
 
 
 def get_torch_device() -> str:
@@ -29,11 +32,24 @@ class Embedder:
         normalize_embeddings: bool = True,
     ):
         self.model_name = model_name
-        self.model = SentenceTransformer(model_name)
+        self.model = self._load_model(model_name)
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
-        self.dimension: int = self.model.get_sentence_embedding_dimension()
+        self.dimension: int = self.model.get_sentence_embedding_dimension()  # type: ignore
+
+    def _load_model(self, model_name: str) -> SentenceTransformer:
+        """
+        Load a SentenceTransformer model with exception handling
+        """
+        try:
+            return SentenceTransformer(model_name)
+        except RepositoryNotFoundError as e:
+            logger.exception(e)
+            raise EmbedderModelNotFound(e) from e
+        except Exception as e:
+            logger.exception(e)
+            raise e
 
     @property
     def _trace_attributes(self):

@@ -5,11 +5,12 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, status
 from loguru import logger
 from numpy.typing import NDArray
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 from vectorapi.const import DEFAULT_EMBEDDING_MODEL
-from vectorapi.embedder import get_embedder
+from vectorapi.embedder import Embedder, get_embedder
+from vectorapi.exceptions import EmbedderModelNotFound
 from vectorapi.responses import ORJSONResponse
 
 router = APIRouter(
@@ -40,9 +41,26 @@ class EmbeddingResponse(BaseModelCamel):
 
 
 class EmbeddingRequest(BaseModelCamel):
-    model: str = DEFAULT_EMBEDDING_MODEL
-    input: str
+    model: str = Field(default=DEFAULT_EMBEDDING_MODEL, min_length=1)
+    input: str = Field(min_length=1)
     user: str | None = None
+
+
+def try_get_embedder(model_name: str) -> Embedder:
+    logger.debug(f"Loading embedder for model: {model_name}")
+    try:
+        embedder = get_embedder(model_name=model_name)
+    except EmbedderModelNotFound as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"EmbedderModelNotFound: Invalid model name {model_name}, please use a SentenceTransformer compatible model (e.g. {DEFAULT_EMBEDDING_MODEL}): {e}",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error loading embedder: {e}",
+        )
+    return embedder
 
 
 @router.post(
@@ -55,7 +73,7 @@ async def create_embeddings(request: EmbeddingRequest):
     """
     Create embeddings for a given text.
     """
-    embedder = get_embedder(model_name=request.model)
+    embedder = try_get_embedder(model_name=request.model)
     try:
         vector: NDArray[np.float_] = embedder.encode(request.input)
     except Exception as e:
@@ -72,8 +90,8 @@ async def create_embeddings(request: EmbeddingRequest):
 
 
 class SimilarityRequest(BaseModelCamel):
-    model: str = DEFAULT_EMBEDDING_MODEL
-    source_sentence: str
+    model: str = Field(default=DEFAULT_EMBEDDING_MODEL, min_length=1)
+    source_sentence: str = Field(min_length=1)
     sentences: List[str]
 
 
@@ -87,7 +105,7 @@ async def similarity(request: SimilarityRequest):
     """
     Calculate similarity between two inputs
     """
-    embedder = get_embedder(model_name=request.model)
+    embedder = try_get_embedder(model_name=request.model)
 
     try:
         similarity_scores = embedder.generate_similarity(request.source_sentence, request.sentences)
