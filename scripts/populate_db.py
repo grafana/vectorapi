@@ -27,8 +27,8 @@ def upsert_point(payload: Dict) -> None:
 def load_and_format_dataset() -> List[Dict]:
     # Load dataset with embeddings from HuggingFace
     dataset = load_dataset(
-        "grafanalabs/promql-templates",
-        data_files="promql-templates-bge-small-en-embeddings.parquet",
+        "grafanalabs/promql-test-data",
+        data_files="promql-test-data.parquet",
         split="train",
     )
     return dataset
