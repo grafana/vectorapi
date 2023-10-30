@@ -31,7 +31,7 @@ class Embedder:
         normalize_embeddings: bool = True,
     ):
         self.model_name = model_name
-        self.model = None
+        self.model = self._load_model(model_name)
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
