@@ -1,15 +1,16 @@
-import requests
-
 from functools import lru_cache
 from typing import List
 
 import numpy as np
 import opentelemetry.trace
 import torch
+from huggingface_hub.utils._errors import RepositoryNotFoundError
+from loguru import logger
 from numpy.typing import NDArray
 from sentence_transformers import SentenceTransformer
 
 from vectorapi.const import DEFAULT_EMBEDDING_MODEL
+from vectorapi.exceptions import EmbedderModelNotFound
 
 
 def get_torch_device() -> str:
@@ -31,20 +32,23 @@ class Embedder:
         normalize_embeddings: bool = True,
     ):
         self.model_name = model_name
-        self.model = None
+        self.model = self._load_model(model_name)
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
-        self.dimension: int = 0
+        self.dimension: int = self.model.get_sentence_embedding_dimension()  # type: ignore
 
-    def load_model(self, model_name: str) -> None:
+    def _load_model(self, model_name: str) -> SentenceTransformer:
+        """
+        Load a SentenceTransformer model with exception handling
+        """
         try:
-            self.model = SentenceTransformer(model_name)
-            self.dimension: int = self.model.get_sentence_embedding_dimension()
-        except requests.exceptions.HTTPError as e:
-            # huggingface throws "401 Client Error" when a model doesn't exist
-            if "401 Client Error" in e.response.text:
-                raise ValueError(f"Model {model_name} not found") from e
+            return SentenceTransformer(model_name)
+        except RepositoryNotFoundError as e:
+            logger.exception(e)
+            raise EmbedderModelNotFound(e) from e
+        except Exception as e:
+            logger.exception(e)
             raise e
 
     @property
@@ -81,6 +85,4 @@ class Embedder:
 
 @lru_cache(maxsize=3)
 def get_embedder(model_name: str) -> Embedder:
-    emb = Embedder(model_name=model_name)
-    emb.load_model(model_name)
-    return emb
+    return Embedder(model_name=model_name)

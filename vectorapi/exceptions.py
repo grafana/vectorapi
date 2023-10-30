@@ -26,3 +26,11 @@ class CollectionPointFilterError(Exception):
     """
 
     ...
+
+
+class EmbedderModelNotFound(Exception):
+    """
+    Exception raised when attempting to get a model that does not exist
+    """
+
+    ...
