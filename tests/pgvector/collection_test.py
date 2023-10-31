@@ -23,3 +23,15 @@ class TestPGVectorCollection:
         )
 
         assert isinstance(collection.table, type(CollectionTable))
+
+    def test_serialize(self, mock_sessionmaker):
+        collection = PGVectorCollection(
+            name="test_collection",
+            dimension=3,
+            session_maker=mock_sessionmaker,
+        )
+        collection_json = collection.model_dump()
+
+        # make sure we exclude table and session_maker from the json
+        assert "table" not in collection_json.keys()
+        assert "session_maker" not in collection_json.keys()
