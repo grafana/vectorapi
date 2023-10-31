@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
     POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
-    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
+    POSTGRES_PORT: int = int(os.getenv("POSTGRES_PORT", "5432"))
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "postgres")
     DB_URL: str | None = os.getenv("DB_URL")
     ECHO_SQL: bool = bool(os.getenv("ECHO_SQL", False))
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
             username=self.POSTGRES_USER,
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_HOST,
-            port=int(self.POSTGRES_PORT),
+            port=self.POSTGRES_PORT,
             path=self.POSTGRES_DB,
         ).unicode_string()
 
