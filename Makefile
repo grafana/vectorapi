@@ -51,6 +51,12 @@ test: ## Run the unit tests
 test-integration: ## Run the integration tests
 	python -m pytest -v tests/integration --integration
 
+.PHONY: drone
+drone: ## Regenerate and sign drone.yml
+	drone jsonnet --stream --format --source .drone/drone.jsonnet --target .drone/drone.yml
+	drone lint .drone/drone.yml --trusted
+	@drone sign --save grafana/vectorapi .drone/drone.yml || echo "You must set DRONE_SERVER and DRONE_TOKEN. These values can be found on your [drone account](http://drone.grafana.net/account) page."
+
 .PHONY: help
 help: ## Display this help screen
 	@grep -E '^[a-z.A-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

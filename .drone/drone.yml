@@ -1,0 +1,328 @@
+---
+clone:
+  retries: 3
+kind: pipeline
+name: docker-linux-amd64
+platform:
+  arch: amd64
+  os: linux
+services: []
+steps:
+- commands: []
+  environment:
+    DOCKER_BUILDKIT: 1
+  image: plugins/docker
+  name: Build and push Docker image
+  settings:
+    build_args:
+    - BUILDKIT_INLINE_CACHE=1
+    cache_from: grafana/vectorapi
+    password:
+      from_secret: docker_password
+    repo: grafana/vectorapi
+    tags:
+    - ${DRONE_COMMIT_SHA:0:10}-linux-amd64
+    target: production
+    username:
+      from_secret: docker_username
+trigger:
+  ref:
+  - refs/heads/main
+  - refs/heads/public-docker-image
+type: docker
+volumes: []
+---
+clone:
+  retries: 3
+kind: pipeline
+name: docker-linux-arm64
+platform:
+  arch: arm64
+  os: linux
+services: []
+steps:
+- commands: []
+  environment:
+    DOCKER_BUILDKIT: 1
+  image: plugins/docker
+  name: Build and push Docker image
+  settings:
+    build_args:
+    - BUILDKIT_INLINE_CACHE=1
+    cache_from: grafana/vectorapi
+    password:
+      from_secret: docker_password
+    repo: grafana/vectorapi
+    tags:
+    - ${DRONE_COMMIT_SHA:0:10}-linux-arm64
+    target: production
+    username:
+      from_secret: docker_username
+trigger:
+  ref:
+  - refs/heads/main
+  - refs/heads/public-docker-image
+type: docker
+volumes: []
+---
+clone:
+  retries: 3
+depends_on:
+- docker-linux-amd64
+- docker-linux-arm64
+kind: pipeline
+name: docker-manifest
+services: []
+steps:
+- commands: []
+  image: plugins/manifest
+  name: manifest
+  settings:
+    password:
+      from_secret: docker_password
+    platforms:
+    - linux/amd64
+    - linux/arm64
+    tags:
+    - latest
+    target: grafana/vectorapi:${DRONE_COMMIT_SHA:0:10}
+    template: grafana/vectorapi:${DRONE_COMMIT_SHA:0:10}-OS-ARCH
+    username:
+      from_secret: docker_username
+trigger:
+  ref:
+  - refs/heads/main
+  - refs/heads/public-docker-image
+type: docker
+volumes: []
+---
+clone:
+  retries: 3
+kind: pipeline
+name: Python tests
+services:
+- environment:
+    POSTGRES_DB: postgres
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    POSTGRES_USER: postgres
+  image: ankane/pgvector
+  name: db
+steps:
+- commands: []
+  environment:
+    GCS_CACHE_JSON_KEY:
+      from_secret: gcs_service_account_key
+  image: meltwater/drone-cache
+  name: restore setup poetry
+  pull: true
+  settings:
+    archive_format: gzip
+    backend: gcs
+    bucket: drone-cache-mlops
+    cache_key: '{{ os }}-{{ arch }}/py3.11/poetry/1.6.1'
+    mount:
+    - .poetry
+    region: us-central1
+    restore: true
+- commands:
+  - curl -sSL https://install.python-poetry.org | python -
+  depends_on:
+  - restore setup poetry
+  environment:
+    POETRY_HOME: /drone/src/.poetry
+    POETRY_VERSION: 1.6.1
+    POETRY_VIRTUALENVS_IN_PROJECT: true
+    POSTGRES_DB: postgres
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    VECTORAPI_STORE_SCHEMA: test_schema
+  image: python:3.11-bullseye
+  name: setup poetry
+- commands: []
+  depends_on:
+  - setup poetry
+  environment:
+    GCS_CACHE_JSON_KEY:
+      from_secret: gcs_service_account_key
+  image: meltwater/drone-cache
+  name: store setup poetry
+  pull: true
+  settings:
+    archive_format: gzip
+    backend: gcs
+    bucket: drone-cache-mlops
+    cache_key: '{{ os }}-{{ arch }}/py3.11/poetry/1.6.1'
+    mount:
+    - .poetry
+    override: false
+    rebuild: true
+    region: us-central1
+- commands: []
+  environment:
+    GCS_CACHE_JSON_KEY:
+      from_secret: gcs_service_account_key
+  image: meltwater/drone-cache
+  name: restore setup python-venv
+  pull: true
+  settings:
+    archive_format: gzip
+    backend: gcs
+    bucket: drone-cache-mlops
+    cache_key: '{{ os }}-{{ arch }}/py3.11/python-venv/vectorapi/{{ checksum "poetry.lock"
+      }}'
+    mount:
+    - .venv
+    region: us-central1
+    restore: true
+- commands:
+  - export PATH=$POETRY_HOME/bin:$PATH
+  - poetry install --sync
+  depends_on:
+  - restore setup python-venv
+  - setup poetry
+  environment:
+    POETRY_HOME: /drone/src/.poetry
+    POETRY_VERSION: 1.6.1
+    POETRY_VIRTUALENVS_IN_PROJECT: true
+    POSTGRES_DB: postgres
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    VECTORAPI_STORE_SCHEMA: test_schema
+  image: python:3.11-bullseye
+  name: setup python-venv
+- commands: []
+  depends_on:
+  - setup python-venv
+  environment:
+    GCS_CACHE_JSON_KEY:
+      from_secret: gcs_service_account_key
+  image: meltwater/drone-cache
+  name: store setup python-venv
+  pull: true
+  settings:
+    archive_format: gzip
+    backend: gcs
+    bucket: drone-cache-mlops
+    cache_key: '{{ os }}-{{ arch }}/py3.11/python-venv/vectorapi/{{ checksum "poetry.lock"
+      }}'
+    mount:
+    - .venv
+    override: false
+    rebuild: true
+    region: us-central1
+- commands:
+  - export PATH=$POETRY_HOME/bin:$PATH
+  - poetry lock --check
+  depends_on:
+  - setup python-venv
+  environment:
+    POETRY_HOME: /drone/src/.poetry
+    POETRY_VERSION: 1.6.1
+    POETRY_VIRTUALENVS_IN_PROJECT: true
+    POSTGRES_DB: postgres
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    VECTORAPI_STORE_SCHEMA: test_schema
+  image: python:3.11-bullseye
+  name: poetry lock check
+- commands:
+  - . .venv/bin/activate
+  - make lint
+  depends_on:
+  - setup python-venv
+  image: python:3.11-bullseye
+  name: lint
+- commands:
+  - . .venv/bin/activate
+  - make static-analysis
+  depends_on:
+  - setup python-venv
+  environment:
+    POETRY_HOME: /drone/src/.poetry
+    POETRY_VERSION: 1.6.1
+    POETRY_VIRTUALENVS_IN_PROJECT: true
+    POSTGRES_DB: postgres
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    VECTORAPI_STORE_SCHEMA: test_schema
+  image: python:3.11-bullseye
+  name: static analysis
+- commands:
+  - . .venv/bin/activate
+  - make test
+  depends_on:
+  - setup python-venv
+  environment:
+    POETRY_HOME: /drone/src/.poetry
+    POETRY_VERSION: 1.6.1
+    POETRY_VIRTUALENVS_IN_PROJECT: true
+    POSTGRES_DB: postgres
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    VECTORAPI_STORE_SCHEMA: test_schema
+  image: python:3.11-bullseye
+  name: test
+- commands:
+  - . .venv/bin/activate
+  - make test-integration
+  depends_on:
+  - setup python-venv
+  environment:
+    POETRY_HOME: /drone/src/.poetry
+    POETRY_VERSION: 1.6.1
+    POETRY_VIRTUALENVS_IN_PROJECT: true
+    POSTGRES_DB: postgres
+    POSTGRES_HOST: db
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_PORT: 5432
+    VECTORAPI_STORE_SCHEMA: test_schema
+  image: python:3.11-bullseye
+  name: integration
+trigger:
+  ref:
+  - refs/heads/main
+  - refs/heads/public-docker-image
+  - refs/pull/**
+type: docker
+volumes: []
+---
+get:
+  name: .dockerconfigjson
+  path: infra/data/ci/gcr-admin
+kind: secret
+name: gcr_admin
+---
+get:
+  name: .dockerconfigjson
+  path: secret/data/common/gcr
+kind: secret
+name: gcr_reader
+---
+get:
+  name: username
+  path: infra/data/ci/docker_hub
+kind: secret
+name: docker_username
+---
+get:
+  name: password
+  path: infra/data/ci/docker_hub
+kind: secret
+name: docker_password
+---
+get:
+  name: gcp_key
+  path: infra/data/ci/drone-plugins
+kind: secret
+name: gcs_service_account_key
+---
+kind: signature
+hmac: b97fb51e07a3f93a176eb549aa7745c89a2a562634e035a190fdad4130ae7e19
+
+...
