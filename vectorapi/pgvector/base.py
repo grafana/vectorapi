@@ -16,7 +16,7 @@ class Base(DeclarativeBase):
     __abstract__ = True
     # TODO: Remove ignore
     # https://github.com/sqlalchemy/sqlalchemy/issues/10264
-    metadata = MetaData(naming_convention=convention, schema=VECTORAPI_STORE_SCHEMA)  # type: ignore
+    metadata = MetaData(naming_convention=convention, schema=VECTORAPI_STORE_SCHEMA)
 
     def __repr__(self) -> str:
         columns = ", ".join(

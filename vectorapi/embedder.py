@@ -36,7 +36,7 @@ class Embedder:
         self.batch_size = batch_size
         self.device = device
         self.normalize_embeddings = normalize_embeddings
-        self.dimension: int = self.model.get_sentence_embedding_dimension()  # type: ignore
+        self.dimension: int = self.model.get_sentence_embedding_dimension()
 
     def _load_model(self, model_name: str) -> SentenceTransformer:
         """

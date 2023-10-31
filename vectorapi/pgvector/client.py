@@ -67,10 +67,10 @@ class PGVectorClient:
             raise e
 
     def _construct_collection(self, name: str) -> PGVectorCollection:
-        table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
+        table = self._metadata.tables[f"{VECTORAPI_STORE_SCHEMA}.{name}"]
         return PGVectorCollection(
             name=name,
-            dimension=table.c.embedding.type.dim,
+            dimension=table.c.embedding.type.dim,  # type: ignore
             session_maker=self.bound_async_sessionmaker,
         )
 
@@ -78,7 +78,7 @@ class PGVectorClient:
         logger.info(f"Deleting collection name={name}")
         try:
             if self._collection_exists(name):
-                table = self._metadata.tables.get(f"{VECTORAPI_STORE_SCHEMA}.{name}")
+                table = self._metadata.tables[f"{VECTORAPI_STORE_SCHEMA}.{name}"]
                 async with self.engine.begin() as conn:
                     await conn.run_sync(table.drop)
                     self._metadata.remove(table)
@@ -94,7 +94,7 @@ class PGVectorClient:
         await self.sync()
         logger.info("Listing collection..")
         return [
-            {"name": table.name, "dimension": table.c.embedding.type.dim}
+            {"name": table.name, "dimension": table.c.embedding.type.dim}  # type: ignore
             for table in self._metadata.tables.values()
         ]
 

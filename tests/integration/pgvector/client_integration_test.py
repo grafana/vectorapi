@@ -20,7 +20,7 @@ test_collection_name = "test_collection"
 pytestmark = pytest.mark.asyncio
 
 
-class TestPGVectorClient:
+class TestPGVectorClientIntegration:
     @pytest_asyncio.fixture()
     async def engine(self) -> AsyncEngine:
         settings = Settings()
