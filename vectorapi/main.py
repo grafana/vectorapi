@@ -30,7 +30,7 @@ from vectorapi.routes.embeddings import router as embeddings_routers
 
 # The app name, used in tracing span attributes and Prometheus metric names/labels.
 APP_NAME = "vectorapi"
-OTEL_EXPORTER_JAEGER_ENDPOINT = os.getenv("OTEL_EXPORTER_JAEGER_ENDPOINT")
+OTEL_EXPORTER_OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 
 
 def initialize_tracing() -> None:
@@ -69,7 +69,7 @@ async def lifespan(app: fastapi.FastAPI):
 def create_app() -> fastapi.FastAPI:
     """create_app instantiates the FastAPI app."""
     loguru.logger.debug("Setting up FastAPI app..")
-    if OTEL_EXPORTER_JAEGER_ENDPOINT:
+    if OTEL_EXPORTER_OTLP_ENDPOINT:
         initialize_tracing()
 
     app = fastapi.FastAPI(
