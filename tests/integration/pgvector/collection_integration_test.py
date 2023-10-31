@@ -18,7 +18,7 @@ test_collection_name = "test_collection_point"
 pytestmark = pytest.mark.asyncio
 
 
-class TestPGVectorCollection:
+class TestPGVectorCollectionIntegration:
     @pytest_asyncio.fixture()
     async def engine(self) -> AsyncEngine:
         settings = Settings()
