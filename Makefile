@@ -41,7 +41,7 @@ lint: ## Run the linter
 
 .PHONY: static-analysis
 static-analysis: ## Run the static analysis
-	mypy .
+	mypy vectorapi
 
 .PHONY: test
 test: ## Run the unit tests
