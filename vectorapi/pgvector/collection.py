@@ -229,4 +229,3 @@ class PGVectorCollection(BaseModel):
 
 def is_duplicate_key_error(error_message):
     return "duplicate key value violates unique constraint" in error_message
-    return "duplicate key value violates unique constraint" in error_message
