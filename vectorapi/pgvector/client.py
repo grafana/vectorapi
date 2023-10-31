@@ -2,8 +2,6 @@ from typing import Annotated
 
 from fastapi import Depends
 from loguru import logger
-from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, TypeDecorator
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from vectorapi.const import VECTORAPI_STORE_SCHEMA
