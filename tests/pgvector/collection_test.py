@@ -15,7 +15,7 @@ def mock_sessionmaker():
 
 
 class TestPGVectorCollection:
-    def test_init(self, mock_sessionmaker):
+    def test_init(self, mock_sessionmaker: MagicMock):
         collection = PGVectorCollection(
             name="test_collection",
             dimension=3,
@@ -24,7 +24,7 @@ class TestPGVectorCollection:
 
         assert isinstance(collection.table, type(CollectionTable))
 
-    def test_serialize(self, mock_sessionmaker):
+    def test_serialize(self, mock_sessionmaker: MagicMock):
         collection = PGVectorCollection(
             name="test_collection",
             dimension=3,
