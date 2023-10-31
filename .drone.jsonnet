@@ -183,8 +183,6 @@ local python_poetry_test_steps(depends_on=[]) =
     ], image='python:%s-bullseye' % pythonVersion) + {
       environment: poetryWorkspaceHome,
       depends_on: ['setup python-venv'],
-      //  ignore mypy failures for now
-      failure: 'ignore',
     },
     step('test', [
       '. .venv/bin/activate',
