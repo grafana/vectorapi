@@ -1,6 +1,9 @@
 # VectorAPI
 
+[![License](https://img.shields.io/github/license/grafana/vectorapi)](LICENSE)
 [![Build Status](https://drone.grafana.net/api/badges/grafana/vectorapi/status.svg)](https://drone.grafana.net/grafana/vectorapi)
+[![Docker](https://img.shields.io/docker/v/grafana/vectorapi?logo=docker)](https://hub.docker.com/r/grafana/vectorapi/tags)
+[![API Docs](https://img.shields.io/badge/docs-api-blue)](https://grafana.github.io/vectorapi/)
 
 VectorAPI is a service for managing vector collections and performing vector similarity queries using a PostgreSQL vector database with the `pgvector` extension. Utilizes `fastapi` for the HTTP API, `pgvector` and SQLAlchemy for the vector database side and relies on `pytorch` for computing embeddings.
 
