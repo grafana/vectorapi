@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any, AsyncIterator, Dict, List, Optional, Type
 
 from pgvector.sqlalchemy import Vector
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Column, String, and_, cast, delete, or_, select, text
+from sqlalchemy import String, and_, cast, delete, or_, select, text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import AbstractConcreteBase
@@ -86,13 +87,11 @@ class PGVectorCollection(BaseModel):
     name: str
     dimension: int
     session_maker: async_sessionmaker[AsyncSession] = Field(..., exclude=True)
-    table: Type[CollectionTable] | None = Field(default=None, exclude=True)
-
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.table = self.build_table()
+    @cached_property
+    def table(self) -> Type[CollectionTable]:
+        return self.build_table()
 
     def build_table(self) -> Type[CollectionTable]:
         class CustomCollectionTable(CollectionTable):
@@ -181,7 +180,7 @@ class PGVectorCollection(BaseModel):
             else:
                 raise e
 
-    def _build_filter_expressions(self, col: Column, filter_dict: Dict[str, Any]):
+    def _build_filter_expressions(self, col: Mapped[Dict[str, Any]], filter_dict: Dict[str, Any]):
         """
         Recursively build SQLAlchemy filter expressions based on the filter_dict dictionary.
 
@@ -229,4 +228,5 @@ class PGVectorCollection(BaseModel):
 
 
 def is_duplicate_key_error(error_message):
+    return "duplicate key value violates unique constraint" in error_message
     return "duplicate key value violates unique constraint" in error_message
