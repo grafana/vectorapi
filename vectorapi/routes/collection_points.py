@@ -8,6 +8,7 @@ from vectorapi.const import DEFAULT_EMBEDDING_MODEL
 from vectorapi.embedder import get_embedder
 from vectorapi.pgvector.client import StoreClient
 from vectorapi.routes.collections import get_collection
+from vectorapi.models import CollectionPointResult
 
 router = APIRouter(
     prefix="/collections",
@@ -150,6 +151,7 @@ class SearchPointRequest(BaseModel):
     filter: Optional[Dict[str, Any]] = None
     top_k: int = 10
     model: str = DEFAULT_EMBEDDING_MODEL
+    with_vector: bool = False
 
 
 @router.post(
@@ -160,7 +162,7 @@ async def search(
     collection_name: str,
     request: SearchPointRequest,
     client: StoreClient,
-):
+) -> List[CollectionPointResult]:
     """Search collection with a given text input."""
     collection = await get_collection(collection_name, client)
 
@@ -197,10 +199,14 @@ async def search(
     logger.debug(f"Searching {request.top_k} embeddings for query")
     try:
         points = await collection.query(vector.tolist(), request.top_k, filter_dict=request.filter)
+        if request.with_vector is False:
+            # drop embeddings from response
+            for point in points:
+                point.payload.embedding = []
+        return points
     except Exception as e:
         logger.exception(e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error searching embeddings: {e}",
         )
-    return points
