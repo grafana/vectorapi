@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 ### Runtime base image ###
-FROM python:3.11-slim-bullseye AS runtime-base
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime AS runtime-base
 
 # add htop for monitoring
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache

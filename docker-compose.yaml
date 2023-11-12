@@ -37,3 +37,10 @@ services:
       - 8889:8889
     depends_on:
       - db
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
