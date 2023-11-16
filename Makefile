@@ -10,10 +10,6 @@ build: ## Build the docker image
 up: build ## Run the docker compose stack
 	docker compose up
 
-.PHONY: populate-db
-populate-db: env ## Populate the database with data
-	poetry run python -m scripts.populate_db
-
 # LOCAL DEV
 .PHONY: env
 env: ## Create the virtual environment
@@ -56,6 +52,22 @@ drone: ## Regenerate and sign drone.yml
 	drone jsonnet --stream --format --source .drone/drone.jsonnet --target .drone/drone.yml
 	drone lint .drone/drone.yml --trusted
 	@drone sign --save grafana/vectorapi .drone/drone.yml || echo "You must set DRONE_SERVER and DRONE_TOKEN. These values can be found on your [drone account](http://drone.grafana.net/account) page."
+
+.PHONY: create-collection
+create-collection: ## Create grafana.promql.templates collection
+	echo "Creating the collection..."
+	curl -X POST "http://localhost:8889/v1/collections/create" \
+		-H "Content-Type: application/json" \
+		-d '{"collection_name":"grafana.promql.templates", "dimension":384}'
+
+.PHONY: populate-db
+populate-db: create-collection ## Populate the database with test data
+	echo "Populating database with test data...";
+	dataset=https://huggingface.co/datasets/grafanalabs/promql-test-data/resolve/main/promql-test-data.json; \
+	json=$$(curl -s -L $$dataset); \
+	echo "$$json" | jq -c '.[]' | pv -l -s $$(echo "$$json" | jq 'length') | while read -r line; do \
+		curl -s -X POST -H "Content-Type: application/json" -d "$$line" http://localhost:8889/v1/collections/grafana.promql.templates/upsert > /dev/null; \
+	done
 
 .PHONY: help
 help: ## Display this help screen
