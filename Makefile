@@ -63,11 +63,13 @@ create-collection: ## Create grafana.promql.templates collection
 .PHONY: populate-db
 populate-db: create-collection ## Populate the database with test data
 	echo "Populating database with test data...";
-	dataset=https://huggingface.co/datasets/grafanalabs/promql-test-data/resolve/main/promql-test-data.json; \
-	json=$$(curl -s -L $$dataset); \
-	echo "$$json" | jq -c '.[]' | pv -l -s $$(echo "$$json" | jq 'length') | while read -r line; do \
-		curl -s -X POST -H "Content-Type: application/json" -d "$$line" http://localhost:8889/v1/collections/grafana.promql.templates/upsert > /dev/null; \
-	done
+	json=$$(curl -s -L https://huggingface.co/datasets/grafanalabs/promql-test-data/resolve/main/promql-test-data.json); counter=0;\
+    echo "Loading..."; \
+    echo "$$json" | jq -c '.[]' | while IFS= read -r line; do counter=$$((counter + 1)); \
+        if [ $$((counter % 100)) -eq 0 ]; then \
+            echo "Still loading... $$counter / $$(echo "$$json" | jq 'length')"; \
+        fi; curl -s -X POST -H "Content-Type: application/json" -d "$$line" http://localhost:8889/v1/collections/grafana.promql.templates/upsert > /dev/null; \
+    done; echo "Done!"
 
 .PHONY: help
 help: ## Display this help screen
