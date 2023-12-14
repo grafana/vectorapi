@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
   && rm -rf /var/lib/apt/lists/*
 
 # pin the version of poetry we install
-ENV POETRY_VERSION=1.6.1 \
+ENV POETRY_VERSION=1.7.1 \
   # make poetry install to this location so we can add it to PATH
   POETRY_HOME="/opt/.poetry" \
   # set cache folder
