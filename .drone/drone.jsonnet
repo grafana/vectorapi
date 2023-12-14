@@ -141,7 +141,7 @@ local dockerManifestPipeline = pipeline(
 
 // Tests and integration tests
 local poetryWorkspaceHome = {
-  POETRY_VERSION: '1.6.1',
+  POETRY_VERSION: '1.7.1',
   POETRY_VIRTUALENVS_IN_PROJECT: true,
   POETRY_HOME: '/drone/src/.poetry',
   POSTGRES_HOST: 'db',
